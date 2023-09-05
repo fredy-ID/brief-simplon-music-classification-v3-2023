@@ -5,7 +5,7 @@ from rest_framework.response import Response
 import joblib
 import pandas as pd
 import numpy as np
-import IPython.display as ipd
+from tensorflow.keras.models import load_model
 import librosa
 import librosa.display
 from sklearn.preprocessing import LabelEncoder

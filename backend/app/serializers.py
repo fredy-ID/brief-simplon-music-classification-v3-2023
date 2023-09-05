@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from .models import Scanner
+from .models import Predict
 
-class ScannerSerializer(serializers.ModelSerializer):
+class PredictSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Scanner
+        model = Predict
         fields = 'all'
