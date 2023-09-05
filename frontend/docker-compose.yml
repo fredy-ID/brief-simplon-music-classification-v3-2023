@@ -1,0 +1,15 @@
+version: '3'
+services:
+  solidjs-dev:
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000  # Assurez-vous que le port 3000 est exposé dans le conteneur
+    expose:
+      - 3000
+    volumes:
+      - .:/app  # Montez le répertoire de travail local dans le conteneur
+    environment:
+      NODE_ENV: development
