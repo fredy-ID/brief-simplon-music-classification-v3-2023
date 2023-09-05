@@ -17,13 +17,13 @@ scaler = StandardScaler()
 class_names = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
 num_classes = len(class_names)
 
-try:
-    model = load_model('app/ai_models/modelF.hdf5')
-except Exception as e:
-    print('_____________________________')
-    print('Erreur lors du chargement du modèle :', e)
-    print('_____________________________')
-    raise
+# try:
+#     model = load_model('app/ai_models/modelF.hdf5')
+# except Exception as e:
+#     print('_____________________________')
+#     print('Erreur lors du chargement du modèle :', e)
+#     print('_____________________________')
+#     raise
 
 def audio_pipeline(audio):
     features = []
