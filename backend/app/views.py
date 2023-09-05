@@ -4,7 +4,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 
-from .serializers import ScannerSerializer
+from .serializers import PredictSerializer
 
 class_names = ['blues', 'classical', 'country', 'disco', 'hiphop','jazz', 'metal', 'pop', 'reggae', 'rock']
 num_classes = len(class_names)
@@ -31,7 +31,7 @@ except Exception as e:
     raise
 
 class PredictView(generics.CreateAPIView):
-    serializer_class = ScannerSerializer
+    serializer_class = PredictSerializer
     permission_classes = (AllowAny,)
 
     def create(self, request, *args, **kwargs):
