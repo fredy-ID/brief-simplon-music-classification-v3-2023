@@ -26,6 +26,7 @@ deactivate
 ```sh
 cd backend
 pip install -r requirements.txt
+pip install joblib pandas IPython librosa matplotlib
 ```
 
 ### Lancer le serveur django
