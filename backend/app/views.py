@@ -2,7 +2,6 @@ import os
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-import joblib
 import numpy as np
 from tensorflow.keras.models import load_model
 import librosa
@@ -18,14 +17,14 @@ class_names = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'meta
 num_classes = len(class_names)
 
 try:
-    model = load_model('app/ai_models/modelF.hdf5')
+    model = load_model('app/ai_models/stable_model')
 except Exception as e:
     print('_____________________________')
     print('Erreur lors du chargement du modèle :', e)
     print('_____________________________')
     raise
 
-def audio_pipeline(audio):
+def audio_pipeline(audio): 
     features = []
 
     # Calcul du ZCR
