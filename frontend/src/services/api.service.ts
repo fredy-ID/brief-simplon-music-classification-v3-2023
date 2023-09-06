@@ -29,7 +29,6 @@ export default class Api {
                 return false
             }
         }
-
     }
 
     static async get(url: string){

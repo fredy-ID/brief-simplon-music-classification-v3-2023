@@ -1,4 +1,5 @@
 import os
+from django.conf import settings
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -9,6 +10,9 @@ import librosa.display
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import StandardScaler
 from .serializers import PredictSerializer
+from .forms import UploadFileForm
+import soundfile as sf
+
 
 encoder = LabelEncoder()
 scaler = StandardScaler()
@@ -75,21 +79,52 @@ class PredictView(generics.CreateAPIView):
     
     
     def post(self, request, *args, **kwargs):
-        
+        try:
+            music = request.FILES['music']
+        except Exception as e:
+            return Response(
+                {
+                    'msg': "La musique n'a pas été acceptée",
+                    'error': str(e),
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         response = super().post(request, *args, **kwargs)
         instance = response.data.get('id', None)
         
-        if instance is not None:
-            return Response(
-                {
-                    'msg': "Prédiction faite",
-                    'predicted_classes': "predicted_class_names",
-                    'id': instance
-                },
-                status=status.HTTP_200_OK
-            )
-        else:
-            return response
+        # Découpage du fichier audio en plusieurs segemnts
+        print(settings.MEDIA_ROOT + music.name + '.wav')
+        y, sr = librosa.load(open(settings.MEDIA_ROOT + music.name))
+
+        # Découpage en segments de 10 secondes
+        # segment_duration = 10  # en secondes
+        # segments = []
+        # for start_time in range(0, len(y), int(segment_duration * sr)):
+        #     end_time = min(start_time + int(segment_duration * sr), len(y))
+        #     segment = y[start_time:end_time]
+        #     segments.append(segment)
+        
+        # Extraction de 30 secondes dans le fichier audio
+        desired_duration = 30
+        desired_start = 15
+        start_time = int(desired_start * sr)
+        end_time = int(desired_start+desired_duration * sr)
+        segment = y[start_time:end_time]
+        
+        print("segment", segment)
+        print("sr", sr)
+        print("start_time", start_time)
+        print("end_time", end_time)
+        
+        return Response(
+            {
+                'msg': "Prédiction faite",
+                'predicted_classes': "predicted_class_names",
+                'id': instance
+            },
+            status=status.HTTP_200_OK
+        )
     
     # def post(self, request, *args, **kwargs):
     #     try:
