@@ -3,9 +3,10 @@ import { file } from "../file-selection/FileSelection";
 
 import WaveSurfer from "wavesurfer.js"
 
+export const [wavesurfer, setWavesurfer] = createSignal<WaveSurfer>()
+
 export default function (){
     const [refWave, setRefWave] = createSignal<HTMLElement>()
-    const [wavesurfer, setWavesurfer] = createSignal<WaveSurfer>()
 
     createEffect(() => {
         if(file() != undefined){
@@ -18,10 +19,11 @@ export default function (){
                 progressColor: 'rgb(100, 0, 100)',
                 url: audioUrlObject,
                 height: 60,
+                width: 100,
                 barWidth: 2,
                 barGap: 1,
                 barRadius: 2,
-                autoplay: true
+                autoplay: false
             }))
         }
     })

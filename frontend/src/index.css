@@ -20,3 +20,10 @@ code {
   height: calc(100vh - 75px);
   @apply w-[80%] mx-auto pt-5;
 }
+
+path {
+  fill: none;
+  stroke: #1a36d4;
+  stroke-width: 2px;
+  stroke-linejoin: round;
+}

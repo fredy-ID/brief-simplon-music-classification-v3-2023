@@ -12,10 +12,10 @@ export default function(props: {onSelect: (e: any) => void}){
     };
  
     return (
-      <div class="relative inline-block">
+      <div class="w-full">
         <label
           for="file-input"
-          class="px-4 py-2 bg-blue-500 text-white rounded cursor-pointer hover:bg-blue-600"
+          class="px-5 py-2 bg-blue-500 text-white rounded cursor-pointer hover:bg-blue-600"
         >
           Sélectionner un fichier
         </label>
