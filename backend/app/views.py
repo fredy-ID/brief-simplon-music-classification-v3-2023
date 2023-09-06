@@ -73,16 +73,25 @@ class PredictView(generics.CreateAPIView):
     serializer_class = PredictSerializer
     permission_classes = (AllowAny,)
     
-    def create(self, request, *args, **kwargs):
-        return Response(
-            {
-                'msg': "Prédiction faite",
-                'predicted_classes': "predictions"
-            },
-            status=status.HTTP_200_OK
-        )
-
-    # def create(self, request, *args, **kwargs):
+    
+    def post(self, request, *args, **kwargs):
+        
+        response = super().post(request, *args, **kwargs)
+        instance = response.data.get('id', None)
+        
+        if instance is not None:
+            return Response(
+                {
+                    'msg': "Prédiction faite",
+                    'predicted_classes': "predicted_class_names",
+                    'id': instance
+                },
+                status=status.HTTP_200_OK
+            )
+        else:
+            return response
+    
+    # def post(self, request, *args, **kwargs):
     #     try:
     #         music = request.FILES['music']  # Suppose que la musique est téléchargée en tant que fichier
     #         audio, sr = librosa.load(music, sr=None)  # Charge le fichier audio
@@ -101,11 +110,14 @@ class PredictView(generics.CreateAPIView):
     #         predicted_class_names = [class_names[class_index] for class_index in predicted_classes]
 
     #         print(f"Prédiction pour la musique : {predicted_class_names}")
+            
+    #         instance = self.create(request, *args, **kwargs)
 
     #         return Response(
     #             {
     #                 'msg': "Prédiction faite",
-    #                 'predicted_classes': predicted_class_names
+    #                 'predicted_classes': predicted_class_names,
+    #                 'id': instance.id
     #             },
     #             status=status.HTTP_200_OK
     #         )
