@@ -72,49 +72,40 @@ def audio_pipeline(audio):
 class PredictView(generics.CreateAPIView):
     serializer_class = PredictSerializer
     permission_classes = (AllowAny,)
-    
+
     def create(self, request, *args, **kwargs):
-        return Response(
-            {
-                'msg': "Prédiction faite",
-                'predicted_classes': "predictions"
-            },
-            status=status.HTTP_200_OK
-        )
+        try:
+            music = request.FILES['music']  # Suppose que la musique est téléchargée en tant que fichier
+            audio, sr = librosa.load(music, sr=None)  # Charge le fichier audio
+            features = audio_pipeline(audio)  # Extrait les caractéristiques audio
+            x_t = np.array(features, dtype=float).reshape(1, -1)  # Transforme les caractéristiques en tableau 2D
 
-    # def create(self, request, *args, **kwargs):
-    #     try:
-    #         music = request.FILES['music']  # Suppose que la musique est téléchargée en tant que fichier
-    #         audio, sr = librosa.load(music, sr=None)  # Charge le fichier audio
-    #         features = audio_pipeline(audio)  # Extrait les caractéristiques audio
-    #         x_t = np.array(features, dtype=float).reshape(1, -1)  # Transforme les caractéristiques en tableau 2D
+            # Échelonne les données
+            x_t = scaler.transform(x_t)
 
-    #         # Échelonne les données
-    #         x_t = scaler.transform(x_t)
+            # Prédiction
+            prediction = model.predict(x_t)
 
-    #         # Prédiction
-    #         prediction = model.predict(x_t)
+            probs = np.exp(prediction) / np.sum(np.exp(prediction), axis=1, keepdims=True)
 
-    #         probs = np.exp(prediction) / np.sum(np.exp(prediction), axis=1, keepdims=True)
+            predicted_classes = np.argmax(probs, axis=1)
+            predicted_class_names = [class_names[class_index] for class_index in predicted_classes]
 
-    #         predicted_classes = np.argmax(probs, axis=1)
-    #         predicted_class_names = [class_names[class_index] for class_index in predicted_classes]
+            print(f"Prédiction pour la musique : {predicted_class_names}")
 
-    #         print(f"Prédiction pour la musique : {predicted_class_names}")
-
-    #         return Response(
-    #             {
-    #                 'msg': "Prédiction faite",
-    #                 'predicted_classes': predicted_class_names
-    #             },
-    #             status=status.HTTP_200_OK
-    #         )
-    #     except Exception as e:
-    #         print('Erreur lors de la prédiction :', e)
-    #         return Response(
-    #             {
-    #                 'msg': "Erreur lors de la prédiction",
-    #                 'error': str(e)
-    #             },
-    #             status=status.HTTP_400_BAD_REQUEST
-    #         )
+            return Response(
+                {
+                    'msg': "Prédiction faite",
+                    'predicted_classes': predicted_class_names
+                },
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            print('Erreur lors de la prédiction :', e)
+            return Response(
+                {
+                    'msg': "Erreur lors de la prédiction",
+                    'error': str(e)
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
