@@ -16,7 +16,7 @@ export default function (){
             <img class="img" src={audioImage} alt="" />
         </div>
         <div class="w-full overflow-hidden">
-            { file()?.name }
+            
         </div>
     </div>
 }

@@ -18,8 +18,7 @@ export default function (){
                 waveColor: 'rgb(200, 0, 200)',
                 progressColor: 'rgb(100, 0, 100)',
                 url: audioUrlObject,
-                height: 60,
-                width: 100,
+                height: 20,
                 barWidth: 2,
                 barGap: 1,
                 barRadius: 2,
@@ -29,5 +28,5 @@ export default function (){
     })
 
 
-    return <div ref={setRefWave} class="mt-4"></div>
+    return <div ref={setRefWave}></div>
 }

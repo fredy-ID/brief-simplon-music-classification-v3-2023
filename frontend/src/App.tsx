@@ -48,24 +48,19 @@ const App: Component = () => {
       <TopBar />
 
       <section id='layout'>
-        <section class='flex flex-wrap w-full  items-center justify-around'>
-          <div class="block w-auto min-w-[200px]">
+        <section class='flex flex-wrap w-full  items-center justify-around '>
+          <div class="block w-auto min-w-[150px]">
             <FileSelection onSelect={(e) => {
               console.log("test", e);
             }} />
-            <Show when={file() != undefined}>
-              <div class="mt-2">
-                <AudioCard />
-              </div>
-            </Show>
           </div>
 
           <Show when={file() != undefined}>
-            <div class="w-[70%] ">
+            <div class="w-[78%]">
               <AudioWave />
             </div>
 
-            <div class="w-[5%] flex items-center cursor-pointer" onClick={play}>
+            <div class="w-[5%] flex items-end cursor-pointer" onClick={play}>
               <Show when={isPlaying()} fallback={<PlayButton />}>
                 <PauseButton />
               </Show>
