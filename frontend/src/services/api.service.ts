@@ -1,5 +1,5 @@
 const config = {
-    host: "http://localhost:3000/api",
+    host: "http://simplon.fredy-mc.fr/backend-music-classification-v3/api",
     options: {
         method: "GET",
         headers: {
@@ -42,9 +42,17 @@ export default class Api {
 
 
     static async post(url: string, body: object){
+        let data;
+
+        if(body instanceof FormData){
+            data = body
+        }else{
+            data = JSON.stringify(body)
+        }
+        
         const json = await Api.generic(url, {
             method: "POST",
-            body: JSON.stringify(body)
+            body: data
         })
         
         if(!json) return false
