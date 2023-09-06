@@ -48,8 +48,8 @@ const App: Component = () => {
       <TopBar />
 
       <section id='layout'>
-        <section class='flex w-full  items-center justify-around'>
-          <div class="block w-[15%]">
+        <section class='flex flex-wrap w-full  items-center justify-around'>
+          <div class="block w-auto min-w-[200px]">
             <FileSelection onSelect={(e) => {
               console.log("test", e);
             }} />
@@ -76,7 +76,6 @@ const App: Component = () => {
         <Show when={file() != undefined}>
           <section class='results flex justify-center mt-5'>
             <Result />
-            <p class='text-2xl'>resultat en cour de construction</p>
           </section>
         </Show>
       </section>

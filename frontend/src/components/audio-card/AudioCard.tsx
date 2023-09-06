@@ -7,8 +7,7 @@ export default function (){
     
     createEffect(() => {
         if(file() != undefined){
-            console.log(file());
-            
+            console.log(file());   
         }
     })
 

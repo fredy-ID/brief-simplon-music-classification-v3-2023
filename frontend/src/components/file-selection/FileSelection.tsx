@@ -15,7 +15,7 @@ export default function(props: {onSelect: (e: any) => void}){
       <div class="w-full">
         <label
           for="file-input"
-          class="px-5 py-2 bg-blue-500 text-white rounded cursor-pointer hover:bg-blue-600"
+          class="px-5 py-2 text-center w-full bg-blue-500 text-white rounded cursor-pointer hover:bg-blue-600 block "
         >
           Sélectionner un fichier
         </label>

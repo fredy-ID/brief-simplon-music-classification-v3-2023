@@ -1,19 +1,20 @@
 const config = {
-    host: "http://simplon.fredy-mc.fr/backend-music-classification-v3/api",
+    // host: "http://simplon.fredy-mc.fr/backend-music-classification-v3/api",
+    host: "http://127.0.0.1:8000",
+    baseUrl: "/api",
     options: {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+    }
 }
 
 export default class Api {
 
     static async generic(url: string, options: object){
+        const URL = config.host + config.baseUrl + url;
+        console.log(URL);
         let response: any = undefined;
         try{
-            response = await fetch(config.host + url, {...config.options, ...options})
+            response = await fetch(URL, {...config.options, ...options})
         }catch(error){
             console.log(error);
             return false
