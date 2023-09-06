@@ -26,15 +26,15 @@ jobs:
     - name: 📂 Sync files
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
+        local-dir: ./backend/
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ./backend/
-    - name: Install Dependencies
-      run: |
-        cd backend
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+    # - name: Install Dependencies
+      # run: |
+      #   cd backend
+      #   python -m pip install --upgrade pip
+      #   pip install -r requirements.txt
     # - name: Run Tests
     #   run: |
     #     python manage.py test
