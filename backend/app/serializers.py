@@ -4,4 +4,4 @@ from .models import Predict
 class PredictSerializer(serializers.ModelSerializer):
     class Meta:
         model = Predict
-        fields = 'all'
+        fields = '__all__'
