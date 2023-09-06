@@ -1,8 +1,10 @@
 import { createSignal } from "solid-js";
+
 export const [file, setFile] = createSignal<File | undefined>();
+export const getFileBlobUrl = () => BlobFileUrl
+
 let BlobFileUrl: string;
 
-export const getFileBlobUrl = () => BlobFileUrl
 
 export default function(props: {onSelect: (e: any) => void}){
     const handleFileSelect = (e: any) => {
