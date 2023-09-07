@@ -204,8 +204,72 @@ class CreateCsvView(generics.CreateAPIView):
             },
             status=status.HTTP_200_OK
         )
-        
-    
+
+
+# Limit représente le nombre limite de prediction par genre nécessaire pour l'extraction vers le CSV
+def extractFeatureFromDBToCSV(limit = 2):
+    print('in extract features  ')
+    genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
+    feature_of_predictions_by_genre = {}
+
+    for genre in genres:
+        predictions = Predict.objects.filter(csv=None, prediction=genre)[:limit]
+
+        # Pourquoi un array ici, car pour X genre on peux avoir plusieur feature à extraire
+        # Le nombre de feature à extraire étant définit par limit
+        feature_of_predictions_by_genre[genre] = []
+
+        for prediction in predictions:
+            feature_of_predictions_by_genre[genre].append({    
+                "chroma_stft_mean": prediction.feature.chroma_stft_mean,
+                "chroma_stft_var": prediction.feature.chroma_stft_var,
+                "rms_mean":        prediction.feature.rms_mean,
+                "rms_var" :        prediction.feature.rms_var,
+                "spectral_centroids_mean": prediction.feature.spectral_centroids_mean,
+                "spectral_centroids_var": prediction.feature.spectral_centroids_var,
+                "spectral_bandwidth_mean": prediction.feature.spectral_bandwidth_mean,
+                "spectral_bandwidth_var": prediction.feature.spectral_bandwidth_var,
+                "rolloff_mean" : prediction.feature.rolloff_mean,
+                "rolloff_var": prediction.feature.rolloff_var,
+                "zcr_mean": prediction.feature.zcr_mean,
+                "zcr_var": prediction.feature.zcr_var,
+                "harmony_mean": prediction.feature.harmony_mean,
+                "harmony_var": prediction.feature.harmony_var,
+                "tempo_mean": prediction.feature.tempo_mean,
+                "tempo_var": prediction.feature.tempo_var 
+            })
+
+    data = {
+        "chroma_stft_mean": [],
+        "chroma_stft_var": [],
+        "rms_mean": [],
+        "rms_var": [],
+        "spectral_centroids_mean": [],
+        "spectral_centroids_var": [],
+        "spectral_bandwidth_mean": [],
+        "spectral_bandwidth_var": [],
+        "rolloff_mean": [],
+        "rolloff_var": [],
+        "zcr_mean": [],
+        "zcr_var": [],
+        "harmony_mean": [],
+        "harmony_var": [],
+        "tempo_mean": [],
+        "tempo_var": [],
+        "genre": [],
+    }
+
+    df = pd.DataFrame(data)
+
+    for genderFeatures in feature_of_predictions_by_genre:
+        for feature in feature_of_predictions_by_genre[genderFeatures]:
+            print(feature)
+            feature['genre'] = genderFeatures
+            series = pd.Series(feature)
+            df = pd.concat([df, series.to_frame().T])
+
+    return df
+
 class RetrainingView(generics.CreateAPIView):
     serializer_class = RetrainingSerializer
     permission_classes = (AllowAny,)
@@ -214,15 +278,20 @@ class RetrainingView(generics.CreateAPIView):
         
         # TODO: Récupération de la data par nombre définit par l'utilisateur
         try:
-            # genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
-            genres = ["['blues']", "['classical']", "['country']", "['disco']", "['hiphop']", "['jazz']", "['metal']", "['pop']", "['reggae']", "['rock']"]
-            predictions_by_genre = {}
+            genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
+            # genres = ["['blues']", "['classical']", "['country']", "['disco']", "['hiphop']", "['jazz']", "['metal']", "['pop']", "['reggae']", "['rock']"]
+            feature_of_predictions_by_genre = {}
+
+            # TODO Work with it !
+            dataframe = extractFeatureFromDBToCSV()
 
             for genre in genres:
                 predictions = Predict.objects.filter(csv=None, prediction=genre)
                 for prediction in predictions:
-                    predictions_by_genre[genre] = prediction.feature
-                
+                    feature_of_predictions_by_genre[genre] = prediction.feature
+
+                # if(len(feature_of_predictions_by_genre) != len())
+                # print(len(feature_of_predictions_by_genre))
                 # return Response(
                 #     {
                 #         'msg': "test",
@@ -232,8 +301,9 @@ class RetrainingView(generics.CreateAPIView):
                 # )
                 
                 # TODO: Ajout de la data récupéré dans le CSV
-                new_features_df = pd.DataFrame({'predictions': predictions_by_genre[genre]})
-                
+
+                # TODO Fix error
+                new_features_df = pd.DataFrame({'predictions': feature_of_predictions_by_genre[genre]})
                 new_features_df['genre'] = genre
 
                 csv_file_path = "app/CSVs/dataset.csv"
@@ -260,6 +330,7 @@ class RetrainingView(generics.CreateAPIView):
                 final_df.to_csv(csv_file_path, index=False)
                 
         except Exception as e:
+            print(e)
             return Response(
                 {
                     'msg': f"Impossible de récupérer les données ciblées : {str(e)}"
