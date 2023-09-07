@@ -1,23 +1,22 @@
-import os
-import csv
-from rest_framework import generics, status
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-import numpy as np
-import pandas as pd
-from tensorflow import keras
-from tensorflow.keras.models import load_model
-import librosa
-import librosa.display
-from sklearn.preprocessing import LabelEncoder
-# from sklearn.preprocessing import StandardScaler
-from .serializers import PredictSerializer, UserFeedbackSerializer, RetrainingSerializer, FeatureSerializer, CSVDatasetSerializer
-import joblib
-from .forms import UploadFileForm
-from .models import Predict, Features, CSVDataset, UserFeedback
-import soundfile as sf
-from django.db.models import Count
+from .serializers import PredictSerializer, UserFeedbackSerializer, RetrainingSerializer
 from sklearn.model_selection import train_test_split
+# from sklearn.preprocessing import StandardScaler
+from rest_framework.permissions import AllowAny
+from sklearn.preprocessing import LabelEncoder
+from rest_framework.response import Response
+from rest_framework import generics, status
+from tensorflow.keras.models import load_model
+from .models import Predict, Features
+from django.db.models import Count
+from tensorflow import keras
+import soundfile as sf
+import librosa.display
+import pandas as pd
+import numpy as np
+import librosa
+import joblib
+import csv
+import os
 
 
 encoder = LabelEncoder()
