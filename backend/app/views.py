@@ -262,7 +262,7 @@ class RetrainingView(generics.CreateAPIView):
                 existing_df = pd.read_csv(csv_file_path)
                 final_df = pd.concat([existing_df, new_features_df], axis=1)
                 
-                existing_df.to_csv(csv_file_path, index=False)
+                final_df.to_csv(csv_file_path, index=False)
                 
         except Exception as e:
             return Response(
