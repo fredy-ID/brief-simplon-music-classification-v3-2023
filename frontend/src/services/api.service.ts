@@ -1,20 +1,32 @@
 const config = {
-    // host: "http://127.0.0.1:8000",
-    host: "http://simplon.fredy-mc.fr/backend-music-classification-v3",
+    host: "http://127.0.0.1:8000",
+    // host: "http://simplon.fredy-mc.fr/backend-music-classification-v3",
     baseUrl: "/api",
     options: {
         method: "GET",
+        
     }
 }
 
 export default class Api {
 
-    static async generic(url: string, options: object){
+    static async generic(url: string, options: object, haveContentType = false){
         const URL = config.host + config.baseUrl + url;
-        console.log(URL);
         let response: any = undefined;
+        let contentType = {
+            
+        }
+        
+        if(haveContentType){
+            contentType = {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+        }
+
         try{
-            response = await fetch(URL, {...config.options, ...options})
+            response = await fetch(URL, {...config.options, ...contentType, ...options})
         }catch(error){
             console.log(error);
             return false
@@ -41,7 +53,7 @@ export default class Api {
     }
 
 
-    static async post(url: string, body: object){
+    static async post(url: string, body: object, haveContentType = false){
         let data;
 
         if(body instanceof FormData){
@@ -53,7 +65,7 @@ export default class Api {
         const json = await Api.generic(url, {
             method: "POST",
             body: data
-        })
+        }, haveContentType)
         
         if(!json) return false
         return json

@@ -5,9 +5,10 @@ import TopBar from './components/top-bar/TopBar';
 import FileSelection, { file } from './components/file-selection/FileSelection';
 import AudioWave, { wavesurfer } from './components/audio-wave/AudioWave';
 import AudioCard from './components/audio-card/AudioCard';
-import Result from './components/results/Result';
-import ApproveButtons from './components/approve-prediction-buttons/ApproveButtons'
+import Result, { response } from './components/results/Result';
+import ApproveButtons, { goodResponse } from './components/approve-prediction-buttons/ApproveButtons'
 import prediction from './components/results/Result';
+import MusicalGenderButtons from './components/display-musical-gender-buttons/MusicalGenderButtons';
 
 const PauseButton = () => {
   return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -76,12 +77,15 @@ const App: Component = () => {
           </section>
         </Show>
 
-        <Show when={prediction() != undefined}>
+        <Show when={response() != undefined}>
           <section class='results flex justify-center mt-5'>
             <ApproveButtons />
           </section>
         </Show>
         
+        <Show when={!goodResponse()}>
+          <MusicalGenderButtons />
+        </Show>
       </section>
 
     </div>

@@ -21,6 +21,25 @@ scaler = joblib.load("./app/ai_models/scalerModelF.pkl")
 class_names = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
 num_classes = len(class_names)
 
+
+def get_3sec_sample(uploaded_audio):
+    audio, sample_rate = librosa.load(
+        uploaded_audio,
+        sr=None,
+    )
+
+    segment_duration = 3  # Durée de chaque segment en secondes
+    segment_length = int(sample_rate * segment_duration)
+    segments = []
+
+    # Découpage
+    for i in range(0, len(audio), segment_length):
+        segment = audio[i : i + segment_length]
+        segments.append(segment)
+
+    return segments
+
+
 try:
     model = load_model('app/ai_models/stable_model')
 except Exception as e:
@@ -83,35 +102,12 @@ class PredictView(generics.CreateAPIView):
         music = request.FILES['music']  # Suppose que la musique est téléchargée en tant que fichier
         print(music)
         # return Response("music")
-        audio, sr = librosa.load(music, sr=None)  # Charge le fichier audio
-        features = audio_pipeline(audio)  # Extrait les caractéristiques audio
+        # audio, sr = librosa.load(music, sr=None)
 
-        print("type", type(features[0]))
-        data = {
-            "chroma_stft_mean": features[0],
-            "chroma_stft_var": features[1],
+        audio = get_3sec_sample(music)  # Récupère un tableau de features pour chaque 3 seconde de la musique
+        features = audio_pipeline(audio[2])  # Extrait les caractéristiques audio
 
-            "rms_mean": features[2],
-            "rms_var": features[3],
 
-            "spectral_centroids_mean": features[4],
-            "spectral_centroids_var": features[5],
-
-            "spectral_bandwidth_mean": features[6],
-            "spectral_bandwidth_var": features[7],
-
-            "rolloff_mean": features[8],
-            "rolloff_var": features[9],
-
-            "zcr_mean": features[10],
-            "zcr_var": features[11],
-
-            "harmony_mean": features[12],
-            "harmony_var": features[13],
-
-            "tempo_mean": features[14],
-            "tempo_var": features[15],
-        }
         savedFeature = Features.objects.create(
             chroma_stft_mean = features[0],
             chroma_stft_var = features[1],
@@ -132,7 +128,6 @@ class PredictView(generics.CreateAPIView):
         
         )
 
-        serialized_predict = FeatureSerializer(savedFeature)
 
         x_t = np.array(features, dtype=float).reshape(1, -1)  # Transforme les caractéristiques en tableau 2D
         # return Response(x_t)
@@ -152,16 +147,13 @@ class PredictView(generics.CreateAPIView):
         predicted = Predict.objects.create(feature = savedFeature, prediction = predicted_class_names)
 
         predictedSerialized = PredictSerializer(predicted)
-        return Response(predictedSerialized.data)
-
-        return Response(
-            {
+        return Response(            {
                 'msg': "Prédiction faite",
                 'predicted_classes': predicted_class_names,
-                # 'id': instance.id
+                'id': predictedSerialized.data.get("id")
             },
-            status=status.HTTP_200_OK
-        )
+            status=status.HTTP_200_OK)
+
     
     # def post(self, request, *args, **kwargs):
     #     try:
