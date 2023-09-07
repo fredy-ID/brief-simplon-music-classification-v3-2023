@@ -28,12 +28,22 @@ class Features(models.Model):
     tempo_var = models.FloatField()
 
     
+class CSVDataset(models.Model):
+    id    = models.BigAutoField(primary_key=True)
+    name = models.CharField(max_length=50)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    
 class Predict(models.Model):
     id    = models.BigAutoField(primary_key=True)
     music = models.FileField(null=True)
-    feature = models.OneToOneField(Features, on_delete=models.CASCADE)
     prediction = models.TextField(null=True)
     
+    feature = models.OneToOneField(Features, on_delete=models.CASCADE)
+    csv = models.ForeignKey(CSVDataset, on_delete=models.DO_NOTHING, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -58,3 +68,4 @@ class UserFeedback(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
