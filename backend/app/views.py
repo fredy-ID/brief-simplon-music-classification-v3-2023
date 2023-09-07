@@ -214,7 +214,6 @@ class RetrainingView(generics.CreateAPIView):
         
         # TODO: Récupération de la data par nombre définit par l'utilisateur
         try:
-            # Récupération de la data par nombre défini par l'utilisateur
             genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
             predictions_by_genre = {}
 
@@ -242,7 +241,6 @@ class RetrainingView(generics.CreateAPIView):
             )
         
         
-        
         try:
             # TODO: Entraînement du modèle
             x = np.array(final_df, dtype = float)
@@ -262,7 +260,6 @@ class RetrainingView(generics.CreateAPIView):
                 keras.layers.Dense(64,activation="relu"),
                 keras.layers.Dropout(0.2),
                 keras.layers.Dense(10, activation="softmax"),
-                
             ])
             model.compile(optimizer='adam',loss='sparse_categorical_crossentropy',metrics='accuracy')
             _, accuracy = model.evaluate(x_test, y_test, batch_size=128)
