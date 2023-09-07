@@ -3,7 +3,7 @@ import { Show, type Component, createSignal, createEffect, onMount, Switch, Matc
 import styles from './App.module.css';
 import TopBar from './components/top-bar/TopBar';
 import PanelsButton, { Panels, onPanel } from './components/panels-buttons/PanelsButton';
-import TrainView from './views/TrainView';
+import PredictionView from './views/PredictView';
 import DatasetView from './views/DatasetView';
 
 
@@ -17,7 +17,7 @@ const App: Component = () => {
       <PanelsButton />
       <Switch>
         <Match when={onPanel() == Panels.prediction}>
-          <TrainView />
+          <PredictionView />
         </Match>
 
         <Match when={onPanel() == Panels.data}>

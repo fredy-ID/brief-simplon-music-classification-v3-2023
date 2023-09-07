@@ -11,9 +11,9 @@ from sklearn.preprocessing import LabelEncoder
 from .serializers import PredictSerializer, UserFeedbackSerializer, FeatureSerializer
 import joblib
 from .forms import UploadFileForm
-from .models import Predict, Features
+from .models import Predict, Features, UserFeedback
 import soundfile as sf
-
+from django.db.models import Count
 
 encoder = LabelEncoder()
 scaler = joblib.load("./app/ai_models/scalerModelF.pkl")
@@ -142,7 +142,7 @@ class PredictView(generics.CreateAPIView):
 
         # instance = self.create(request, *args, **kwargs)
 
-        predicted = Predict.objects.create(feature = savedFeature, prediction = predicted_class_names)
+        predicted = Predict.objects.create(feature = savedFeature, prediction = predicted_class_names[0])
 
         predictedSerialized = PredictSerializer(predicted)
         return Response(            {
@@ -165,15 +165,18 @@ class UserFeedbackView(generics.CreateAPIView):
         request.data['predict'] = predict.id
         self.create(request, *args, **kwargs)
     
-        return Response(
-            {
-                'msg': "Merci pour votre feedback"
-            },
+        return Response({'msg': "Merci pour votre feedback"},
             status=status.HTTP_200_OK
         )
-    
 
-class TrainModel(generics.CreateAPIView):
 
-    def post(self, request, *args, **kwargs):
-        print('ok')
+class Dataset(generics.CreateAPIView):
+    def get(self, request, *args, **kwargs):
+        predictions = Predict.objects.values('prediction').annotate(dcount=Count('prediction'))
+        serializedPrediction = {}
+
+        for prediction in predictions:
+            serializedPrediction[prediction['prediction']] = prediction["dcount"]
+
+        
+        return Response(serializedPrediction)
