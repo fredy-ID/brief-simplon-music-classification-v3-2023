@@ -100,11 +100,13 @@ class PredictView(generics.CreateAPIView):
     
     def post(self, request, *args, **kwargs):
         music = request.FILES['music']  # Suppose que la musique est téléchargée en tant que fichier
-        # audio = get_3sec_sample(music)  # Récupère un tableau de features pour chaque 3 seconde de la musique
-        # features = audio_pipeline(audio[2])  # Extrait les caractéristiques audio
+        print(music)
+        # return Response("music")
+        # audio, sr = librosa.load(music, sr=None)
 
-        audio, sr = librosa.load(music, sr=None)
-        features = audio_pipeline(audio)
+        audio = get_3sec_sample(music)  # Récupère un tableau de features pour chaque 3 seconde de la musique
+        features = audio_pipeline(audio[2])  # Extrait les caractéristiques audio
+
 
         savedFeature = Features.objects.create(
             chroma_stft_mean = features[0],
