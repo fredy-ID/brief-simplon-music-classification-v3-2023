@@ -1,6 +1,6 @@
 const config = {
-    // host: "http://simplon.fredy-mc.fr/backend-music-classification-v3/api",
-    host: "http://127.0.0.1:8000",
+    // host: "http://127.0.0.1:8000",
+    host: "http://simplon.fredy-mc.fr/backend-music-classification-v3",
     baseUrl: "/api",
     options: {
         method: "GET",
