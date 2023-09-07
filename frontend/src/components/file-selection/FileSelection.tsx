@@ -1,4 +1,5 @@
 import { createSignal } from "solid-js";
+import Dropfile from "./Dropfile";
 
 export const [file, setFile] = createSignal<File | undefined>();
 export const getFileBlobUrl = () => BlobFileUrl
@@ -25,6 +26,8 @@ export default function(props: {onSelect: (e: any) => void}){
           class="hidden"
           onChange={handleFileSelect}
         />
+
+        <Dropfile />
       </div>
     );
 }
