@@ -100,13 +100,11 @@ class PredictView(generics.CreateAPIView):
     
     def post(self, request, *args, **kwargs):
         music = request.FILES['music']  # Suppose que la musique est téléchargée en tant que fichier
-        print(music)
-        # return Response("music")
-        # audio, sr = librosa.load(music, sr=None)
+        # audio = get_3sec_sample(music)  # Récupère un tableau de features pour chaque 3 seconde de la musique
+        # features = audio_pipeline(audio[2])  # Extrait les caractéristiques audio
 
-        audio = get_3sec_sample(music)  # Récupère un tableau de features pour chaque 3 seconde de la musique
-        features = audio_pipeline(audio[2])  # Extrait les caractéristiques audio
-
+        audio, sr = librosa.load(music, sr=None)
+        features = audio_pipeline(audio)
 
         savedFeature = Features.objects.create(
             chroma_stft_mean = features[0],
@@ -154,47 +152,6 @@ class PredictView(generics.CreateAPIView):
             },
             status=status.HTTP_200_OK)
 
-    
-    # def post(self, request, *args, **kwargs):
-    #     try:
-    #         music = request.FILES['music']  # Suppose que la musique est téléchargée en tant que fichier
-    #         audio, sr = librosa.load(music, sr=None)  # Charge le fichier audio
-    #         features = audio_pipeline(audio)  # Extrait les caractéristiques audio
-    #         x_t = np.array(features, dtype=float).reshape(1, -1)  # Transforme les caractéristiques en tableau 2D
-
-    #         # Échelonne les données
-    #         x_t = scaler.transform(x_t)
-
-    #         # Prédiction
-    #         prediction = model.predict(x_t)
-
-    #         probs = np.exp(prediction) / np.sum(np.exp(prediction), axis=1, keepdims=True)
-
-    #         predicted_classes = np.argmax(probs, axis=1)
-    #         predicted_class_names = [class_names[class_index] for class_index in predicted_classes]
-
-    #         print(f"Prédiction pour la musique : {predicted_class_names}")
-            
-    #         instance = self.create(request, *args, **kwargs)
-
-    #         return Response(
-    #             {
-    #                 'msg': "Prédiction faite",
-    #                 'predicted_classes': predicted_class_names,
-    #                 'id': instance.id
-    #             },
-    #             status=status.HTTP_200_OK
-    #         )
-    #     except Exception as e:
-    #         print('Erreur lors de la prédiction :', e)
-    #         return Response(
-    #             {
-    #                 'msg': "Erreur lors de la prédiction",
-    #                 'error': str(e)
-    #             },
-    #             status=status.HTTP_400_BAD_REQUEST
-    #         )
-    
 class UserFeedbackView(generics.CreateAPIView):
     serializer_class = UserFeedbackSerializer
     permission_classes = (AllowAny,)
@@ -214,3 +171,9 @@ class UserFeedbackView(generics.CreateAPIView):
             },
             status=status.HTTP_200_OK
         )
+    
+
+class TrainModel(generics.CreateAPIView):
+
+    def post(self, request, *args, **kwargs):
+        print('ok')

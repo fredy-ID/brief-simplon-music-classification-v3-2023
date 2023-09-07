@@ -1,0 +1,1 @@
+export const GENRE_CHOICES = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock'];
