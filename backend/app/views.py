@@ -214,7 +214,8 @@ class RetrainingView(generics.CreateAPIView):
         
         # TODO: Récupération de la data par nombre définit par l'utilisateur
         try:
-            genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
+            # genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
+            genres = ['[blues]', '[classical]', '[country]', '[disco]', '[hiphop]', '[jazz]', '[metal]', '[pop]', '[reggae]', '[rock]']
             predictions_by_genre = {}
 
             for genre in genres:
