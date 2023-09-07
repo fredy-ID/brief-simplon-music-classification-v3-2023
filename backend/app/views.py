@@ -3,15 +3,16 @@ from rest_framework import generics, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 import numpy as np
+import pandas as pd
 from tensorflow.keras.models import load_model
 import librosa
 import librosa.display
 from sklearn.preprocessing import LabelEncoder
 # from sklearn.preprocessing import StandardScaler
-from .serializers import PredictSerializer, UserFeedbackSerializer, FeatureSerializer
+from .serializers import PredictSerializer, UserFeedbackSerializer, FeatureSerializer, CSVDatasetSerializer
 import joblib
 from .forms import UploadFileForm
-from .models import Predict, Features, UserFeedback
+from .models import Predict, Features, CSVDataset, UserFeedback
 import soundfile as sf
 from django.db.models import Count
 
@@ -182,3 +183,70 @@ class Dataset(generics.CreateAPIView):
 
         
         return Response(serializedPrediction)
+        
+class CreateCsvView(generics.CreateAPIView):
+    serializer_class = UserFeedbackSerializer
+    permission_classes = (AllowAny,)
+    
+    def post(self, request, *args, **kwargs):
+        
+        # TODO: Création du CSV en physique
+        # TODO: Ajout d'un pourcentage de data par genre dans le CSV
+    
+        self.create(request, *args, **kwargs)
+
+        return Response(
+            {
+                'msg': "CSV créé"
+            },
+            status=status.HTTP_200_OK
+        )
+        
+    
+class RetrainingView(generics.CreateAPIView):
+    serializer_class = CSVDataset
+    permission_classes = (AllowAny,)
+    
+    def post(self, request, *args, **kwargs):
+        
+            # TODO: Récupération de la data par nombre définit par l'utilisateur
+        try:
+            # Récupération de la data par nombre défini par l'utilisateur
+            genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
+            predictions_by_genre = {}
+
+            for genre in genres:
+                df = pd.read_csv("./CSVs/dataset.csv")
+                predictions = Predict.objects.filter(csv=None, feature__genre=genre)[:request.POST['num_data_to_csv']]
+                predictions_by_genre[genre] = [prediction.prediction for prediction in predictions]
+                        
+        except Exception as e:
+            return Response(
+                {
+                    'msg': f"Impossible de récupérer les données ciblées : {str(e)}"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # TODO: Ajout de la data récupéré dans le CSV
+        
+        try:
+            # TODO: Entraînement du modèle
+            pass
+        except:
+            return Response(
+                {
+                    'msg': "L'entraînement n'a pas été effectué"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        self.create(request, *args, **kwargs)
+    
+        return Response(
+            {
+                'msg': "L'entraînement a bien été effectué"
+            },
+            status=status.HTTP_200_OK
+        )
+    
