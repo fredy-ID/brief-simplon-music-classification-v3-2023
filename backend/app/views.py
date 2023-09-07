@@ -1,5 +1,4 @@
 import os
-from django.conf import settings
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -8,14 +7,13 @@ from tensorflow.keras.models import load_model
 import librosa
 import librosa.display
 from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import StandardScaler
-from .serializers import PredictSerializer
-from .forms import UploadFileForm
-import soundfile as sf
-
+# from sklearn.preprocessing import StandardScaler
+from .serializers import PredictSerializer, FeatureSerializer
+import joblib
+from .models import Predict, Features
 
 encoder = LabelEncoder()
-scaler = StandardScaler()
+scaler = joblib.load("./app/ai_models/scalerModelF.pkl")
 
 class_names = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
 num_classes = len(class_names)
@@ -35,7 +33,7 @@ def audio_pipeline(audio):
     chroma_stft = librosa.feature.chroma_stft(y=audio)
     features.append(np.mean(chroma_stft))
     features.append(np.var(chroma_stft))
-
+    
     rms = librosa.feature.rms(y=audio)
     features.append(np.mean(rms))
     features.append(np.var(rms))
@@ -79,49 +77,86 @@ class PredictView(generics.CreateAPIView):
     
     
     def post(self, request, *args, **kwargs):
-        try:
-            music = request.FILES['music']
-        except Exception as e:
-            return Response(
-                {
-                    'msg': "La musique n'a pas été acceptée",
-                    'error': str(e),
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        
+        music = request.FILES['music']  # Suppose que la musique est téléchargée en tant que fichier
+        print(music)
+        # return Response("music")
+        audio, sr = librosa.load(music, sr=None)  # Charge le fichier audio
+        features = audio_pipeline(audio)  # Extrait les caractéristiques audio
 
-        response = super().post(request, *args, **kwargs)
-        instance = response.data.get('id', None)
-        
-        # Découpage du fichier audio en plusieurs segemnts
-        print(settings.MEDIA_ROOT + music.name + '.wav')
-        y, sr = librosa.load(open(settings.MEDIA_ROOT + music.name))
+        print("type", type(features[0]))
+        data = {
+            "chroma_stft_mean": features[0],
+            "chroma_stft_var": features[1],
 
-        # Découpage en segments de 10 secondes
-        # segment_duration = 10  # en secondes
-        # segments = []
-        # for start_time in range(0, len(y), int(segment_duration * sr)):
-        #     end_time = min(start_time + int(segment_duration * sr), len(y))
-        #     segment = y[start_time:end_time]
-        #     segments.append(segment)
+            "rms_mean": features[2],
+            "rms_var": features[3],
+
+            "spectral_centroids_mean": features[4],
+            "spectral_centroids_var": features[5],
+
+            "spectral_bandwidth_mean": features[6],
+            "spectral_bandwidth_var": features[7],
+
+            "rolloff_mean": features[8],
+            "rolloff_var": features[9],
+
+            "zcr_mean": features[10],
+            "zcr_var": features[11],
+
+            "harmony_mean": features[12],
+            "harmony_var": features[13],
+
+            "tempo_mean": features[14],
+            "tempo_var": features[15],
+        }
+        savedFeature = Features.objects.create(
+            chroma_stft_mean = features[0],
+            chroma_stft_var = features[1],
+            rms_mean = features[2],
+            rms_var = features[3],
+            spectral_centroids_mean = features[4],
+            spectral_centroids_var = features[5],
+            spectral_bandwidth_mean = features[6],
+            spectral_bandwidth_var = features[7],
+            rolloff_mean = features[8],
+            rolloff_var = features[9],
+            zcr_mean = features[10],
+            zcr_var = features[11],
+            harmony_mean = features[12],
+            harmony_var = features[13],
+            tempo_mean = features[14],
+            tempo_var = features[15],
         
-        # Extraction de 30 secondes dans le fichier audio
-        desired_duration = 30
-        desired_start = 15
-        start_time = int(desired_start * sr)
-        end_time = int(desired_start+desired_duration * sr)
-        segment = y[start_time:end_time]
-        
-        print("segment", segment)
-        print("sr", sr)
-        print("start_time", start_time)
-        print("end_time", end_time)
-        
+        )
+
+        serialized_predict = FeatureSerializer(savedFeature)
+
+        x_t = np.array(features, dtype=float).reshape(1, -1)  # Transforme les caractéristiques en tableau 2D
+        # return Response(x_t)
+        # Échelonne les données
+        x_t = scaler.transform(x_t)
+
+        # Prédiction
+        prediction = model.predict(x_t)
+
+        probs = np.exp(prediction) / np.sum(np.exp(prediction), axis=1, keepdims=True)
+        predicted_classes = np.argmax(probs, axis=1)
+        predicted_class_names = [class_names[class_index] for class_index in predicted_classes]
+        print(f"Prédiction pour la musique : {predicted_class_names}")
+
+        # instance = self.create(request, *args, **kwargs)
+
+        predicted = Predict.objects.create(feature = savedFeature, prediction = predicted_class_names)
+
+        predictedSerialized = PredictSerializer(predicted)
+        return Response(predictedSerialized.data)
+
         return Response(
             {
                 'msg': "Prédiction faite",
-                'predicted_classes': "predicted_class_names",
-                'id': instance
+                'predicted_classes': predicted_class_names,
+                # 'id': instance.id
             },
             status=status.HTTP_200_OK
         )
