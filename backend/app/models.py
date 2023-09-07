@@ -47,7 +47,7 @@ class Predict(models.Model):
     music = models.FileField(null=True)
     prediction = models.TextField(null=True)
     
-    feature = models.OneToOneField(Features, on_delete=models.CASCADE)
+    feature = models.ForeignKey(Features, on_delete=models.CASCADE)
     csv = models.ForeignKey(CSVDataset, on_delete=models.DO_NOTHING, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
