@@ -8,9 +8,10 @@ interface InterfaceResponse {
     predicted_classes: string | string[],
 }
 
+export const [response, setResponse] = createSignal<InterfaceResponse>()
+
 export default function () {
     let loader = false
-    const [response, setResponse] = createSignal<InterfaceResponse>()
 
     createEffect( async () => {
         if(file() != undefined){

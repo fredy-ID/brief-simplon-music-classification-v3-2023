@@ -9,8 +9,9 @@ import librosa
 import librosa.display
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import StandardScaler
-from .serializers import PredictSerializer
+from .serializers import PredictSerializer, UserFeedbackSerializer
 from .forms import UploadFileForm
+from .models import Predict
 import soundfile as sf
 
 
@@ -94,8 +95,8 @@ class PredictView(generics.CreateAPIView):
         instance = response.data.get('id', None)
         
         # Découpage du fichier audio en plusieurs segemnts
-        print(settings.MEDIA_ROOT + music.name + '.wav')
-        y, sr = librosa.load(open(settings.MEDIA_ROOT + music.name))
+        # music_file = open(settings.MEDIA_ROOT + "\\" +music.name)
+        # y, sr = librosa.load(music_file)
 
         # Découpage en segments de 10 secondes
         # segment_duration = 10  # en secondes
@@ -105,17 +106,21 @@ class PredictView(generics.CreateAPIView):
         #     segment = y[start_time:end_time]
         #     segments.append(segment)
         
-        # Extraction de 30 secondes dans le fichier audio
-        desired_duration = 30
-        desired_start = 15
-        start_time = int(desired_start * sr)
-        end_time = int(desired_start+desired_duration * sr)
-        segment = y[start_time:end_time]
         
-        print("segment", segment)
-        print("sr", sr)
-        print("start_time", start_time)
-        print("end_time", end_time)
+        
+        # # Extraction de 30 secondes dans le fichier audio
+        # desired_duration = 30
+        # desired_start = 15
+        # start_time = int(desired_start * sr)
+        # end_time = int(desired_start+desired_duration * sr)
+        # segment = y[start_time:end_time]
+        
+        # print("_________________________________")
+        # print("segment", segment)
+        # print("sr", sr)
+        # print("start_time", start_time)
+        # print("end_time", end_time)
+        # print("_________________________________")
         
         return Response(
             {
@@ -165,3 +170,23 @@ class PredictView(generics.CreateAPIView):
     #             },
     #             status=status.HTTP_400_BAD_REQUEST
     #         )
+    
+class UserFeedbackView(generics.CreateAPIView):
+    serializer_class = UserFeedbackSerializer
+    permission_classes = (AllowAny,)
+    
+    def post(self, request, *args, **kwargs):
+        try:
+            predict = Predict.objects.get(id=kwargs.get('id_predict'))
+        except Predict.DoesNotExist:
+            return Response({'error': "Cette prédiction n'existe pas"}, status=status.HTTP_404_NOT_FOUND)
+        
+        request.data['predict'] = predict.id
+        self.create(request, *args, **kwargs)
+    
+        return Response(
+            {
+                'msg': "Merci pour votre feedback"
+            },
+            status=status.HTTP_200_OK
+        )
