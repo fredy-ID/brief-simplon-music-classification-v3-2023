@@ -1,4 +1,5 @@
 import os
+import csv
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -215,19 +216,45 @@ class RetrainingView(generics.CreateAPIView):
         # TODO: Récupération de la data par nombre définit par l'utilisateur
         try:
             # genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
-            genres = ['[blues]', '[classical]', '[country]', '[disco]', '[hiphop]', '[jazz]', '[metal]', '[pop]', '[reggae]', '[rock]']
+            genres = ["['blues']", "['classical']", "['country']", "['disco']", "['hiphop']", "['jazz']", "['metal']", "['pop']", "['reggae']", "['rock']"]
             predictions_by_genre = {}
 
             for genre in genres:
-                predictions = Predict.objects.filter(csv=None, feature__genre=genre)[:request.POST['num_data_to_csv']]
-                predictions_by_genre[genre] = [prediction.prediction for prediction in predictions]
+                predictions = Predict.objects.filter(csv=None, prediction=genre)
+                for prediction in predictions:
+                    predictions_by_genre[genre] = prediction.feature
+                
+                # return Response(
+                #     {
+                #         'msg': "test",
+                #         "d": predictions_by_genre
+                #     },
+                #     status=status.HTTP_400_BAD_REQUEST
+                # )
                 
                 # TODO: Ajout de la data récupéré dans le CSV
                 new_features_df = pd.DataFrame({'predictions': predictions_by_genre[genre]})
                 
                 new_features_df['genre'] = genre
 
-                csv_file_path = "./CSVs/dataset.csv"
+                csv_file_path = "app/CSVs/dataset.csv"
+                if os.path.getsize(csv_file_path) == 0:
+                    field_names = [
+                        'chroma_stft_mean', 'chroma_stft_var',
+                        'rms_mean', 'rms_var',
+                        'spectral_centroids_mean', 'spectral_centroids_var',
+                        'spectral_bandwidth_mean', 'spectral_bandwidth_var',
+                        'rolloff_mean', 'rolloff_var',
+                        'zcr_mean', 'zcr_var',
+                        'harmony_mean', 'harmony_var',
+                        'tempo_mean', 'tempo_var',
+                        'genre'  # Add the "genre" field
+                    ]
+                    with open(csv_file_path, 'w', newline='') as csv_file:
+                        writer = csv.DictWriter(csv_file, fieldnames=field_names)
+                        writer.writeheader()
+
+                # csv_file_path = os.path.join(settings.BASE_DIR, 'CSVs', 'dataset.csv')
                 existing_df = pd.read_csv(csv_file_path)
                 final_df = pd.concat([existing_df, new_features_df], axis=1)
                 
@@ -241,16 +268,24 @@ class RetrainingView(generics.CreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        
         try:
-            # TODO: Entraînement du modèle
             x = np.array(final_df, dtype = float)
             x = scaler.fit_transform(final_df)
             y = encoder.fit_transform(genres)
             
             x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.20)
             x_train.shape, x_test.shape, y_train.shape, y_test.shape
-            
+        except Exception as e:
+            return Response(
+                {
+                    'msg': f"une erreur est survenue lors du train_test split: {str(e)}"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # TODO: Entraînement du modèle
+    
             model = keras.models.Sequential([
                 keras.layers.Dense(512, activation="relu", input_shape=(x_train.shape[1],)),
                 keras.layers.Dropout(0.2),
@@ -265,7 +300,16 @@ class RetrainingView(generics.CreateAPIView):
             model.compile(optimizer='adam',loss='sparse_categorical_crossentropy',metrics='accuracy')
             _, accuracy = model.evaluate(x_test, y_test, batch_size=128)
             epochs = 50
-            history = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=epochs, batch_size=128)
+            
+            try:
+                history = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=epochs, batch_size=128)
+            except:
+                return Response(
+                    {
+                        'msg': "L'entraînement n'a pas été effectué"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             
             model.save("ai_models/test/stable_model/")
             model.save_weights('ai_models/test/stable_model/')
@@ -273,7 +317,7 @@ class RetrainingView(generics.CreateAPIView):
         except:
             return Response(
                 {
-                    'msg': "L'entraînement n'a pas été effectué"
+                    'msg': "Une erreur est survenue lors de l'entraînement"
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
