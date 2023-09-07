@@ -9,7 +9,7 @@ import librosa
 import librosa.display
 from sklearn.preprocessing import LabelEncoder
 # from sklearn.preprocessing import StandardScaler
-from .serializers import PredictSerializer, UserFeedbackSerializer, FeatureSerializer, CSVDatasetSerializer
+from .serializers import PredictSerializer, UserFeedbackSerializer, RetrainingSerializer, FeatureSerializer, CSVDatasetSerializer
 import joblib
 from .forms import UploadFileForm
 from .models import Predict, Features, CSVDataset, UserFeedback
@@ -204,7 +204,7 @@ class CreateCsvView(generics.CreateAPIView):
         
     
 class RetrainingView(generics.CreateAPIView):
-    serializer_class = CSVDataset
+    serializer_class = RetrainingSerializer
     permission_classes = (AllowAny,)
     
     def post(self, request, *args, **kwargs):
