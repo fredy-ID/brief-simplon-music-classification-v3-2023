@@ -8,9 +8,12 @@ import librosa
 import librosa.display
 from sklearn.preprocessing import LabelEncoder
 # from sklearn.preprocessing import StandardScaler
-from .serializers import PredictSerializer, FeatureSerializer
+from .serializers import PredictSerializer, UserFeedbackSerializer, FeatureSerializer
 import joblib
+from .forms import UploadFileForm
 from .models import Predict, Features
+import soundfile as sf
+
 
 encoder = LabelEncoder()
 scaler = joblib.load("./app/ai_models/scalerModelF.pkl")
@@ -77,7 +80,6 @@ class PredictView(generics.CreateAPIView):
     
     
     def post(self, request, *args, **kwargs):
-        
         music = request.FILES['music']  # Suppose que la musique est téléchargée en tant que fichier
         print(music)
         # return Response("music")
@@ -200,3 +202,23 @@ class PredictView(generics.CreateAPIView):
     #             },
     #             status=status.HTTP_400_BAD_REQUEST
     #         )
+    
+class UserFeedbackView(generics.CreateAPIView):
+    serializer_class = UserFeedbackSerializer
+    permission_classes = (AllowAny,)
+    
+    def post(self, request, *args, **kwargs):
+        try:
+            predict = Predict.objects.get(id=kwargs.get('id_predict'))
+        except Predict.DoesNotExist:
+            return Response({'error': "Cette prédiction n'existe pas"}, status=status.HTTP_404_NOT_FOUND)
+        
+        request.data['predict'] = predict.id
+        self.create(request, *args, **kwargs)
+    
+        return Response(
+            {
+                'msg': "Merci pour votre feedback"
+            },
+            status=status.HTTP_200_OK
+        )

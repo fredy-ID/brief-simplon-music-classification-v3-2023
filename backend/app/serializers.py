@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Predict, Features
+from .models import Predict, UserFeedback, Features
 
 class PredictSerializer(serializers.ModelSerializer):
     class Meta:
@@ -24,3 +24,8 @@ class FeatureSerializer(serializers.ModelSerializer):
         Create and return a new `Snippet` instance, given the validated data.
         """
         return Features.objects.create(**validated_data)
+
+class UserFeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserFeedback
+        fields = '__all__'

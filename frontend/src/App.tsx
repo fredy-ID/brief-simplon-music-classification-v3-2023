@@ -6,6 +6,8 @@ import FileSelection, { file } from './components/file-selection/FileSelection';
 import AudioWave, { wavesurfer } from './components/audio-wave/AudioWave';
 import AudioCard from './components/audio-card/AudioCard';
 import Result from './components/results/Result';
+import ApproveButtons from './components/approve-prediction-buttons/ApproveButtons'
+import prediction from './components/results/Result';
 
 const PauseButton = () => {
   return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -73,6 +75,13 @@ const App: Component = () => {
             <Result />
           </section>
         </Show>
+
+        <Show when={prediction() != undefined}>
+          <section class='results flex justify-center mt-5'>
+            <ApproveButtons />
+          </section>
+        </Show>
+        
       </section>
 
     </div>
