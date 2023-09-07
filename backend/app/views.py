@@ -216,10 +216,9 @@ class RetrainingView(generics.CreateAPIView):
             predictions_by_genre = {}
 
             for genre in genres:
-                df = pd.read_csv("./CSVs/dataset.csv")
                 predictions = Predict.objects.filter(csv=None, feature__genre=genre)[:request.POST['num_data_to_csv']]
                 predictions_by_genre[genre] = [prediction.prediction for prediction in predictions]
-                        
+                
         except Exception as e:
             return Response(
                 {
@@ -229,6 +228,10 @@ class RetrainingView(generics.CreateAPIView):
             )
         
         # TODO: Ajout de la data récupéré dans le CSV
+        new_features_df = pd.DataFrame({'predictions': predictions_by_genre[genre]})
+
+        existing_df = pd.read_csv("./CSVs/dataset.csv")
+        final_df = pd.concat([existing_df, new_features_df], axis=1)
         
         try:
             # TODO: Entraînement du modèle
