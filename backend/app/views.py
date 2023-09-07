@@ -4,6 +4,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 import numpy as np
 import pandas as pd
+from tensorflow import keras
 from tensorflow.keras.models import load_model
 import librosa
 import librosa.display
@@ -14,6 +15,7 @@ import joblib
 from .forms import UploadFileForm
 from .models import Predict, Features, CSVDataset, Retraining
 import soundfile as sf
+from sklearn.model_selection import train_test_split
 
 
 encoder = LabelEncoder()
@@ -241,7 +243,7 @@ class RetrainingView(generics.CreateAPIView):
     
     def post(self, request, *args, **kwargs):
         
-            # TODO: Récupération de la data par nombre définit par l'utilisateur
+        # TODO: Récupération de la data par nombre définit par l'utilisateur
         try:
             # Récupération de la data par nombre défini par l'utilisateur
             genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
@@ -251,6 +253,17 @@ class RetrainingView(generics.CreateAPIView):
                 predictions = Predict.objects.filter(csv=None, feature__genre=genre)[:request.POST['num_data_to_csv']]
                 predictions_by_genre[genre] = [prediction.prediction for prediction in predictions]
                 
+                # TODO: Ajout de la data récupéré dans le CSV
+                new_features_df = pd.DataFrame({'predictions': predictions_by_genre[genre]})
+                
+                new_features_df['genre'] = genre
+
+                csv_file_path = "./CSVs/dataset.csv"
+                existing_df = pd.read_csv(csv_file_path)
+                final_df = pd.concat([existing_df, new_features_df], axis=1)
+                
+                existing_df.to_csv(csv_file_path, index=False)
+                
         except Exception as e:
             return Response(
                 {
@@ -259,15 +272,37 @@ class RetrainingView(generics.CreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # TODO: Ajout de la data récupéré dans le CSV
-        new_features_df = pd.DataFrame({'predictions': predictions_by_genre[genre]})
-
-        existing_df = pd.read_csv("./CSVs/dataset.csv")
-        final_df = pd.concat([existing_df, new_features_df], axis=1)
+        
         
         try:
             # TODO: Entraînement du modèle
-            pass
+            x = np.array(final_df, dtype = float)
+            x = scaler.fit_transform(final_df)
+            y = encoder.fit_transform(genres)
+            
+            x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.20)
+            x_train.shape, x_test.shape, y_train.shape, y_test.shape
+            
+            model = keras.models.Sequential([
+                keras.layers.Dense(512, activation="relu", input_shape=(x_train.shape[1],)),
+                keras.layers.Dropout(0.2),
+                keras.layers.Dense(256,activation="relu"),
+                keras.layers.Dropout(0.2),
+                keras.layers.Dense(128,activation="relu"),
+                keras.layers.Dropout(0.2),
+                keras.layers.Dense(64,activation="relu"),
+                keras.layers.Dropout(0.2),
+                keras.layers.Dense(10, activation="softmax"),
+                
+            ])
+            model.compile(optimizer='adam',loss='sparse_categorical_crossentropy',metrics='accuracy')
+            _, accuracy = model.evaluate(x_test, y_test, batch_size=128)
+            epochs = 50
+            history = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=epochs, batch_size=128)
+            
+            model.save("ai_models/test/stable_model/")
+            model.save_weights('ai_models/test/stable_model/')
+            
         except:
             return Response(
                 {
@@ -280,7 +315,10 @@ class RetrainingView(generics.CreateAPIView):
     
         return Response(
             {
-                'msg': "L'entraînement a bien été effectué"
+                'msg': "L'entraînement a été effectué",
+                'epochs': epochs,
+                'accuracy': accuracy,
+                'history': history
             },
             status=status.HTTP_200_OK
         )
