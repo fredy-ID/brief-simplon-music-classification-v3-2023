@@ -19,23 +19,20 @@ export default function () {
 
     createEffect(() => {
         if (wavesurfer() != undefined) {
-            wavesurfer()?.on("play", () => {
-                setIsPlaying(true)
-            })
-
-            wavesurfer()?.on("pause", () => {
-                setIsPlaying(false)
-            })
+            wavesurfer()?.on("play", () => setIsPlaying(true) )
+            wavesurfer()?.on("pause", () => setIsPlaying(false))
         }
     })
     
     return <>
         <section class='flex flex-wrap w-full  items-center justify-around '>
-            <div class="block w-auto min-w-[150px]">
-                <FileSelection onSelect={(e) => {
-                    console.log("test", e);
-                }} />
-            </div>
+            <Show when={file() == undefined}>
+                <div class="block w-auto min-w-[150px]">
+                    <FileSelection onSelect={(e) => {
+                        console.log("test", e);
+                    }} />
+                </div>
+            </Show>
 
             <Show when={file() != undefined}>
                 <div class="w-[78%]">
