@@ -231,10 +231,10 @@ def extractFeatureFromDBToCSV(limit = 2):
     print('in extract features  ')
     genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
     feature_of_predictions_by_genre = {}
-
+    ids_to_update = []
     for genre in genres:
-        predictions = Predict.objects.filter(csv=None, prediction=genre)[:limit]
-
+        predictions = Predict.objects.filter(exists_in_csv=False, prediction=genre)[:limit]
+        
         # Pourquoi un array ici, car pour X genre on peux avoir plusieur feature à extraire
         # Le nombre de feature à extraire étant définit par limit
         feature_of_predictions_by_genre[genre] = []
@@ -258,7 +258,8 @@ def extractFeatureFromDBToCSV(limit = 2):
                 "tempo_mean": prediction.feature.tempo_mean,
                 "tempo_var": prediction.feature.tempo_var 
             })
-
+            ids_to_update.append(prediction.id)
+        
     data = {
         "chroma_stft_mean": [],
         "chroma_stft_var": [],
@@ -283,12 +284,12 @@ def extractFeatureFromDBToCSV(limit = 2):
 
     for genderFeatures in feature_of_predictions_by_genre:
         for feature in feature_of_predictions_by_genre[genderFeatures]:
-            print(feature)
+            # print(feature)
             feature['genre'] = genderFeatures
             series = pd.Series(feature)
             df = pd.concat([df, series.to_frame().T])
 
-    return df
+    return df, ids_to_update
 
 class RetrainingView(generics.CreateAPIView):
     serializer_class = RetrainingSerializer
@@ -296,62 +297,16 @@ class RetrainingView(generics.CreateAPIView):
     
     def post(self, request, *args, **kwargs):
         
-        dataframe = extractFeatureFromDBToCSV()
-        
         # TODO: Récupération de la data par nombre définit par l'utilisateur
+        dataframe, ids_to_update = extractFeatureFromDBToCSV()
         try:
-            # genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
-            # genres = ["['blues']", "['classical']", "['country']", "['disco']", "['hiphop']", "['jazz']", "['metal']", "['pop']", "['reggae']", "['rock']"]
-            # feature_of_predictions_by_genre = {}
 
-            # TODO Work with it !
-            
-
-            # for genre in genres:
-            #     predictions = Predict.objects.filter(csv=None, prediction=genre)
-            #     for prediction in predictions:
-            #         feature_of_predictions_by_genre[genre] = prediction.feature
-
-                # if(len(feature_of_predictions_by_genre) != len())
-                # print(len(feature_of_predictions_by_genre))
-                # return Response(
-                #     {
-                #         'msg': "test",
-                #         "d": predictions_by_genre
-                #     },
-                #     status=status.HTTP_400_BAD_REQUEST
-                # )
-                
-                # TODO: Ajout de la data récupéré dans le CSV
-
-                # TODO Fix error
-                # new_features_df = pd.DataFrame({'predictions': feature_of_predictions_by_genre[genre]})
-                # new_features_df['genre'] = genre
-
+            # TODO: Ajout de la data récupéré dans le CSV
             csv_file_path = "app/CSVs/dataset.csv"
-            # if os.path.getsize(csv_file_path) == 0:
-            #     field_names = [
-            #         'chroma_stft_mean', 'chroma_stft_var',
-            #         'rms_mean', 'rms_var',
-            #         'spectral_centroids_mean', 'spectral_centroids_var',
-            #         'spectral_bandwidth_mean', 'spectral_bandwidth_var',
-            #         'rolloff_mean', 'rolloff_var',
-            #         'zcr_mean', 'zcr_var',
-            #         'harmony_mean', 'harmony_var',
-            #         'tempo_mean', 'tempo_var',
-            #         'genre'  # Add the "genre" field
-            #     ]
-            #     with open(csv_file_path, 'w', newline='') as csv_file:
-            #         writer = csv.DictWriter(csv_file, fieldnames=field_names)
-            #         writer.writeheader()
 
-            # csv_file_path = os.path.join(settings.BASE_DIR, 'CSVs', 'dataset.csv')
             try:
                 existing_df = pd.read_csv(csv_file_path)
             except FileNotFoundError:
-                existing_df = pd.DataFrame()  # Créez un DataFrame vide s'il n'existe pas
-
-            if existing_df.empty:
                 header = [
                     "chroma_stft_mean",
                     "chroma_stft_var",
@@ -371,17 +326,18 @@ class RetrainingView(generics.CreateAPIView):
                     "tempo_var",
                     "genre"
                 ]
-
-                # Ouvrir le fichier CSV en mode écriture (ajout de données)
-                with open(csv_file_path, mode='w', newline='') as fichier_csv:
-                    writer = csv.writer(fichier_csv)
-                    writer.writerow(header)
-                    
-            final_df = pd.concat([existing_df, dataframe], axis=1)
+                existing_df = pd.DataFrame(columns=header)
+            
+            existing_df.reset_index(drop=True, inplace=True)
+            dataframe.reset_index(drop=True, inplace=True)
+            final_df = pd.concat([existing_df, dataframe], axis=0)
             final_df.to_csv(csv_file_path, index=False)
+            
+            Predict.objects.filter(id__in=ids_to_update).update(exists_in_csv=True)
                 
         except Exception as e:
             print("____________________________________")
+            print("Impossible de récupérer les données ciblées")
             print(e)
             print("____________________________________")
             return Response(
@@ -392,13 +348,20 @@ class RetrainingView(generics.CreateAPIView):
             )
         
         try:
-            x = np.array(final_df, dtype = float)
-            x = scaler.fit_transform(final_df)
-            y = encoder.fit_transform(genres)
+            genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
+            y = final_df['genre']
+            x = final_df.drop(columns=['genre'])
+            x = np.array(x, dtype = float)
+            x = scaler.fit_transform(x)
+            y = encoder.fit_transform(y)
             
             x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.20)
             x_train.shape, x_test.shape, y_train.shape, y_test.shape
         except Exception as e:
+            print("____________________________________")
+            print("une erreur est survenue lors du train_test split")
+            print(e)
+            print("____________________________________")
             return Response(
                 {
                     'msg': f"une erreur est survenue lors du train_test split: {str(e)}"
@@ -427,6 +390,10 @@ class RetrainingView(generics.CreateAPIView):
             try:
                 history = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=epochs, batch_size=128)
             except:
+                print("____________________________________")
+                print("L'entraînement n'a pas été effectué")
+                print(e)
+                print("____________________________________")
                 return Response(
                     {
                         'msg': "L'entraînement n'a pas été effectué"
@@ -434,10 +401,14 @@ class RetrainingView(generics.CreateAPIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            model.save("ai_models/test/stable_model/")
-            model.save_weights('ai_models/test/stable_model/')
+            model.save("app/ai_models/test/stable_model/")
+            model.save_weights('app/ai_models/test/stable_model/')
             
-        except:
+        except Exception as e:
+            print("____________________________________")
+            print("Une erreur est survenue lors de l'entraînement")
+            print(e)
+            print("____________________________________")
             return Response(
                 {
                     'msg': "Une erreur est survenue lors de l'entraînement"

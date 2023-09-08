@@ -48,8 +48,8 @@ class Predict(models.Model):
     prediction = models.TextField(null=True)
     
     feature = models.ForeignKey(Features, on_delete=models.CASCADE)
-    csv = models.ForeignKey(CSVDataset, on_delete=models.DO_NOTHING, null=True)
-
+    exists_in_csv = models.BooleanField(default=False)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
