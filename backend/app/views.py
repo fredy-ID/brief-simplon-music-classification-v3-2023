@@ -329,30 +329,61 @@ class RetrainingView(generics.CreateAPIView):
                 # new_features_df['genre'] = genre
 
             csv_file_path = "app/CSVs/dataset.csv"
-                # if os.path.getsize(csv_file_path) == 0:
-                #     field_names = [
-                #         'chroma_stft_mean', 'chroma_stft_var',
-                #         'rms_mean', 'rms_var',
-                #         'spectral_centroids_mean', 'spectral_centroids_var',
-                #         'spectral_bandwidth_mean', 'spectral_bandwidth_var',
-                #         'rolloff_mean', 'rolloff_var',
-                #         'zcr_mean', 'zcr_var',
-                #         'harmony_mean', 'harmony_var',
-                #         'tempo_mean', 'tempo_var',
-                #         'genre'  # Add the "genre" field
-                #     ]
-                #     with open(csv_file_path, 'w', newline='') as csv_file:
-                #         writer = csv.DictWriter(csv_file, fieldnames=field_names)
-                #         writer.writeheader()
+            # if os.path.getsize(csv_file_path) == 0:
+            #     field_names = [
+            #         'chroma_stft_mean', 'chroma_stft_var',
+            #         'rms_mean', 'rms_var',
+            #         'spectral_centroids_mean', 'spectral_centroids_var',
+            #         'spectral_bandwidth_mean', 'spectral_bandwidth_var',
+            #         'rolloff_mean', 'rolloff_var',
+            #         'zcr_mean', 'zcr_var',
+            #         'harmony_mean', 'harmony_var',
+            #         'tempo_mean', 'tempo_var',
+            #         'genre'  # Add the "genre" field
+            #     ]
+            #     with open(csv_file_path, 'w', newline='') as csv_file:
+            #         writer = csv.DictWriter(csv_file, fieldnames=field_names)
+            #         writer.writeheader()
 
-                # csv_file_path = os.path.join(settings.BASE_DIR, 'CSVs', 'dataset.csv')
-            existing_df = pd.read_csv(csv_file_path)
+            # csv_file_path = os.path.join(settings.BASE_DIR, 'CSVs', 'dataset.csv')
+            try:
+                existing_df = pd.read_csv(csv_file_path)
+            except FileNotFoundError:
+                existing_df = pd.DataFrame()  # Créez un DataFrame vide s'il n'existe pas
+
+            if existing_df.empty:
+                header = [
+                    "chroma_stft_mean",
+                    "chroma_stft_var",
+                    "rms_mean",
+                    "rms_var",
+                    "spectral_centroids_mean",
+                    "spectral_centroids_var",
+                    "spectral_bandwidth_mean",
+                    "spectral_bandwidth_var",
+                    "rolloff_mean",
+                    "rolloff_var",
+                    "zcr_mean",
+                    "zcr_var",
+                    "harmony_mean",
+                    "harmony_var",
+                    "tempo_mean",
+                    "tempo_var",
+                    "genre"
+                ]
+
+                # Ouvrir le fichier CSV en mode écriture (ajout de données)
+                with open(csv_file_path, mode='w', newline='') as fichier_csv:
+                    writer = csv.writer(fichier_csv)
+                    writer.writerow(header)
+                    
             final_df = pd.concat([existing_df, dataframe], axis=1)
-            
             final_df.to_csv(csv_file_path, index=False)
                 
         except Exception as e:
+            print("____________________________________")
             print(e)
+            print("____________________________________")
             return Response(
                 {
                     'msg': f"Impossible de récupérer les données ciblées : {str(e)}"
