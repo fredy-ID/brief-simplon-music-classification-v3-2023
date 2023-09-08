@@ -1,0 +1,11 @@
+.genders-registered-data{
+    @apply flex gap-3;
+}
+
+.genders-registered-data > * {
+    flex: 1;
+}
+
+.gender-label{
+    @apply text-center
+}

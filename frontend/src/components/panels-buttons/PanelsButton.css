@@ -1,0 +1,13 @@
+.panels-button{
+    @apply flex gap-2 justify-between w-full my-3 ;
+}
+.panels-button > *{
+    flex: 1;
+}
+.btn-panel{
+    @apply cursor-pointer w-max  text-center bg-slate-500 rounded-sm text-white
+}
+
+.btn-panel.active{
+    @apply text-green-400;
+}

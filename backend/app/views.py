@@ -1,22 +1,22 @@
-import os
-import csv
-from rest_framework import generics, status
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-import numpy as np
-import pandas as pd
-from tensorflow import keras
-from tensorflow.keras.models import load_model
-import librosa
-import librosa.display
-from sklearn.preprocessing import LabelEncoder
-# from sklearn.preprocessing import StandardScaler
-from .serializers import PredictSerializer, UserFeedbackSerializer, RetrainingSerializer, FeatureSerializer, CSVDatasetSerializer
-import joblib
-from .forms import UploadFileForm
-from .models import Predict, Features, CSVDataset, Retraining
-import soundfile as sf
+from .serializers import PredictSerializer, UserFeedbackSerializer, RetrainingSerializer
 from sklearn.model_selection import train_test_split
+# from sklearn.preprocessing import StandardScaler
+from rest_framework.permissions import AllowAny
+from sklearn.preprocessing import LabelEncoder
+from rest_framework.response import Response
+from rest_framework import generics, status
+from tensorflow.keras.models import load_model
+from .models import Predict, Features
+from django.db.models import Count
+from tensorflow import keras
+import soundfile as sf
+import librosa.display
+import pandas as pd
+import numpy as np
+import librosa
+import joblib
+import csv
+import os
 
 
 encoder = LabelEncoder()
@@ -148,7 +148,7 @@ class PredictView(generics.CreateAPIView):
 
         # instance = self.create(request, *args, **kwargs)
 
-        predicted = Predict.objects.create(feature = savedFeature, prediction = predicted_class_names)
+        predicted = Predict.objects.create(feature = savedFeature, prediction = predicted_class_names[0])
 
         predictedSerialized = PredictSerializer(predicted)
         return Response(            {
@@ -158,47 +158,6 @@ class PredictView(generics.CreateAPIView):
             },
             status=status.HTTP_200_OK)
 
-    
-    # def post(self, request, *args, **kwargs):
-    #     try:
-    #         music = request.FILES['music']  # Suppose que la musique est téléchargée en tant que fichier
-    #         audio, sr = librosa.load(music, sr=None)  # Charge le fichier audio
-    #         features = audio_pipeline(audio)  # Extrait les caractéristiques audio
-    #         x_t = np.array(features, dtype=float).reshape(1, -1)  # Transforme les caractéristiques en tableau 2D
-
-    #         # Échelonne les données
-    #         x_t = scaler.transform(x_t)
-
-    #         # Prédiction
-    #         prediction = model.predict(x_t)
-
-    #         probs = np.exp(prediction) / np.sum(np.exp(prediction), axis=1, keepdims=True)
-
-    #         predicted_classes = np.argmax(probs, axis=1)
-    #         predicted_class_names = [class_names[class_index] for class_index in predicted_classes]
-
-    #         print(f"Prédiction pour la musique : {predicted_class_names}")
-            
-    #         instance = self.create(request, *args, **kwargs)
-
-    #         return Response(
-    #             {
-    #                 'msg': "Prédiction faite",
-    #                 'predicted_classes': predicted_class_names,
-    #                 'id': instance.id
-    #             },
-    #             status=status.HTTP_200_OK
-    #         )
-    #     except Exception as e:
-    #         print('Erreur lors de la prédiction :', e)
-    #         return Response(
-    #             {
-    #                 'msg': "Erreur lors de la prédiction",
-    #                 'error': str(e)
-    #             },
-    #             status=status.HTTP_400_BAD_REQUEST
-    #         )
-    
 class UserFeedbackView(generics.CreateAPIView):
     serializer_class = UserFeedbackSerializer
     permission_classes = (AllowAny,)
@@ -212,9 +171,36 @@ class UserFeedbackView(generics.CreateAPIView):
         request.data['predict'] = predict.id
         self.create(request, *args, **kwargs)
     
+        return Response({'msg': "Merci pour votre feedback"},
+            status=status.HTTP_200_OK
+        )
+
+
+class Dataset(generics.CreateAPIView):
+    def get(self, request, *args, **kwargs):
+        predictions = Predict.objects.values('prediction').annotate(dcount=Count('prediction'))
+        serializedPrediction = {}
+
+        for prediction in predictions:
+            serializedPrediction[prediction['prediction']] = prediction["dcount"]
+
+        
+        return Response(serializedPrediction)
+        
+class CreateCsvView(generics.CreateAPIView):
+    serializer_class = UserFeedbackSerializer
+    permission_classes = (AllowAny,)
+    
+    def post(self, request, *args, **kwargs):
+        
+        # TODO: Création du CSV en physique
+        # TODO: Ajout d'un pourcentage de data par genre dans le CSV
+    
+        self.create(request, *args, **kwargs)
+
         return Response(
             {
-                'msg': "Merci pour votre feedback"
+                'msg': "CSV créé"
             },
             status=status.HTTP_200_OK
         )
@@ -238,6 +224,72 @@ class CreateCsvView(generics.CreateAPIView):
         )
         
     
+
+
+# Limit représente le nombre limite de prediction par genre nécessaire pour l'extraction vers le CSV
+def extractFeatureFromDBToCSV(limit = 2):
+    print('in extract features  ')
+    genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
+    feature_of_predictions_by_genre = {}
+
+    for genre in genres:
+        predictions = Predict.objects.filter(csv=None, prediction=genre)[:limit]
+
+        # Pourquoi un array ici, car pour X genre on peux avoir plusieur feature à extraire
+        # Le nombre de feature à extraire étant définit par limit
+        feature_of_predictions_by_genre[genre] = []
+
+        for prediction in predictions:
+            feature_of_predictions_by_genre[genre].append({    
+                "chroma_stft_mean": prediction.feature.chroma_stft_mean,
+                "chroma_stft_var": prediction.feature.chroma_stft_var,
+                "rms_mean":        prediction.feature.rms_mean,
+                "rms_var" :        prediction.feature.rms_var,
+                "spectral_centroids_mean": prediction.feature.spectral_centroids_mean,
+                "spectral_centroids_var": prediction.feature.spectral_centroids_var,
+                "spectral_bandwidth_mean": prediction.feature.spectral_bandwidth_mean,
+                "spectral_bandwidth_var": prediction.feature.spectral_bandwidth_var,
+                "rolloff_mean" : prediction.feature.rolloff_mean,
+                "rolloff_var": prediction.feature.rolloff_var,
+                "zcr_mean": prediction.feature.zcr_mean,
+                "zcr_var": prediction.feature.zcr_var,
+                "harmony_mean": prediction.feature.harmony_mean,
+                "harmony_var": prediction.feature.harmony_var,
+                "tempo_mean": prediction.feature.tempo_mean,
+                "tempo_var": prediction.feature.tempo_var 
+            })
+
+    data = {
+        "chroma_stft_mean": [],
+        "chroma_stft_var": [],
+        "rms_mean": [],
+        "rms_var": [],
+        "spectral_centroids_mean": [],
+        "spectral_centroids_var": [],
+        "spectral_bandwidth_mean": [],
+        "spectral_bandwidth_var": [],
+        "rolloff_mean": [],
+        "rolloff_var": [],
+        "zcr_mean": [],
+        "zcr_var": [],
+        "harmony_mean": [],
+        "harmony_var": [],
+        "tempo_mean": [],
+        "tempo_var": [],
+        "genre": [],
+    }
+
+    df = pd.DataFrame(data)
+
+    for genderFeatures in feature_of_predictions_by_genre:
+        for feature in feature_of_predictions_by_genre[genderFeatures]:
+            print(feature)
+            feature['genre'] = genderFeatures
+            series = pd.Series(feature)
+            df = pd.concat([df, series.to_frame().T])
+
+    return df
+
 class RetrainingView(generics.CreateAPIView):
     serializer_class = RetrainingSerializer
     permission_classes = (AllowAny,)
@@ -246,15 +298,20 @@ class RetrainingView(generics.CreateAPIView):
         
         # TODO: Récupération de la data par nombre définit par l'utilisateur
         try:
-            # genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
-            genres = ["['blues']", "['classical']", "['country']", "['disco']", "['hiphop']", "['jazz']", "['metal']", "['pop']", "['reggae']", "['rock']"]
-            predictions_by_genre = {}
+            genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
+            # genres = ["['blues']", "['classical']", "['country']", "['disco']", "['hiphop']", "['jazz']", "['metal']", "['pop']", "['reggae']", "['rock']"]
+            feature_of_predictions_by_genre = {}
+
+            # TODO Work with it !
+            dataframe = extractFeatureFromDBToCSV()
 
             for genre in genres:
                 predictions = Predict.objects.filter(csv=None, prediction=genre)
                 for prediction in predictions:
-                    predictions_by_genre[genre] = prediction.feature
-                
+                    feature_of_predictions_by_genre[genre] = prediction.feature
+
+                # if(len(feature_of_predictions_by_genre) != len())
+                # print(len(feature_of_predictions_by_genre))
                 # return Response(
                 #     {
                 #         'msg': "test",
@@ -264,8 +321,9 @@ class RetrainingView(generics.CreateAPIView):
                 # )
                 
                 # TODO: Ajout de la data récupéré dans le CSV
-                new_features_df = pd.DataFrame({'predictions': predictions_by_genre[genre]})
-                
+
+                # TODO Fix error
+                new_features_df = pd.DataFrame({'predictions': feature_of_predictions_by_genre[genre]})
                 new_features_df['genre'] = genre
 
                 csv_file_path = "app/CSVs/dataset.csv"
@@ -292,6 +350,7 @@ class RetrainingView(generics.CreateAPIView):
                 final_df.to_csv(csv_file_path, index=False)
                 
         except Exception as e:
+            print(e)
             return Response(
                 {
                     'msg': f"Impossible de récupérer les données ciblées : {str(e)}"
