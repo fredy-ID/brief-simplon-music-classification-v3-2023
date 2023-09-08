@@ -296,19 +296,21 @@ class RetrainingView(generics.CreateAPIView):
     
     def post(self, request, *args, **kwargs):
         
+        dataframe = extractFeatureFromDBToCSV()
+        
         # TODO: Récupération de la data par nombre définit par l'utilisateur
         try:
-            genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
+            # genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
             # genres = ["['blues']", "['classical']", "['country']", "['disco']", "['hiphop']", "['jazz']", "['metal']", "['pop']", "['reggae']", "['rock']"]
-            feature_of_predictions_by_genre = {}
+            # feature_of_predictions_by_genre = {}
 
             # TODO Work with it !
-            dataframe = extractFeatureFromDBToCSV()
+            
 
-            for genre in genres:
-                predictions = Predict.objects.filter(csv=None, prediction=genre)
-                for prediction in predictions:
-                    feature_of_predictions_by_genre[genre] = prediction.feature
+            # for genre in genres:
+            #     predictions = Predict.objects.filter(csv=None, prediction=genre)
+            #     for prediction in predictions:
+            #         feature_of_predictions_by_genre[genre] = prediction.feature
 
                 # if(len(feature_of_predictions_by_genre) != len())
                 # print(len(feature_of_predictions_by_genre))
@@ -323,31 +325,31 @@ class RetrainingView(generics.CreateAPIView):
                 # TODO: Ajout de la data récupéré dans le CSV
 
                 # TODO Fix error
-                new_features_df = pd.DataFrame({'predictions': feature_of_predictions_by_genre[genre]})
-                new_features_df['genre'] = genre
+                # new_features_df = pd.DataFrame({'predictions': feature_of_predictions_by_genre[genre]})
+                # new_features_df['genre'] = genre
 
-                csv_file_path = "app/CSVs/dataset.csv"
-                if os.path.getsize(csv_file_path) == 0:
-                    field_names = [
-                        'chroma_stft_mean', 'chroma_stft_var',
-                        'rms_mean', 'rms_var',
-                        'spectral_centroids_mean', 'spectral_centroids_var',
-                        'spectral_bandwidth_mean', 'spectral_bandwidth_var',
-                        'rolloff_mean', 'rolloff_var',
-                        'zcr_mean', 'zcr_var',
-                        'harmony_mean', 'harmony_var',
-                        'tempo_mean', 'tempo_var',
-                        'genre'  # Add the "genre" field
-                    ]
-                    with open(csv_file_path, 'w', newline='') as csv_file:
-                        writer = csv.DictWriter(csv_file, fieldnames=field_names)
-                        writer.writeheader()
+            csv_file_path = "app/CSVs/dataset.csv"
+                # if os.path.getsize(csv_file_path) == 0:
+                #     field_names = [
+                #         'chroma_stft_mean', 'chroma_stft_var',
+                #         'rms_mean', 'rms_var',
+                #         'spectral_centroids_mean', 'spectral_centroids_var',
+                #         'spectral_bandwidth_mean', 'spectral_bandwidth_var',
+                #         'rolloff_mean', 'rolloff_var',
+                #         'zcr_mean', 'zcr_var',
+                #         'harmony_mean', 'harmony_var',
+                #         'tempo_mean', 'tempo_var',
+                #         'genre'  # Add the "genre" field
+                #     ]
+                #     with open(csv_file_path, 'w', newline='') as csv_file:
+                #         writer = csv.DictWriter(csv_file, fieldnames=field_names)
+                #         writer.writeheader()
 
                 # csv_file_path = os.path.join(settings.BASE_DIR, 'CSVs', 'dataset.csv')
-                existing_df = pd.read_csv(csv_file_path)
-                final_df = pd.concat([existing_df, new_features_df], axis=1)
-                
-                final_df.to_csv(csv_file_path, index=False)
+            existing_df = pd.read_csv(csv_file_path)
+            final_df = pd.concat([existing_df, dataframe], axis=1)
+            
+            final_df.to_csv(csv_file_path, index=False)
                 
         except Exception as e:
             print(e)
