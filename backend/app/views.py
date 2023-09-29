@@ -423,7 +423,6 @@ class RetrainingView(generics.CreateAPIView):
                 'msg': "L'entraînement a été effectué",
                 'epochs': epochs,
                 'accuracy': accuracy,
-                'history': history
             },
             status=status.HTTP_200_OK
         )
