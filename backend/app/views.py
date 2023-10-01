@@ -4,7 +4,6 @@ from sklearn.model_selection import train_test_split
 from rest_framework.permissions import AllowAny
 from sklearn.preprocessing import LabelEncoder
 from rest_framework.response import Response
-from django.http import JsonResponse
 from rest_framework import generics, status
 from tensorflow.keras.models import load_model
 from .models import Predict, Features
@@ -161,19 +160,12 @@ class PredictView(generics.CreateAPIView):
         predicted = Predict.objects.create(feature = savedFeature, prediction = predicted_class_names[0])
 
         predictedSerialized = PredictSerializer(predicted)
-        # return Response(            {
-        #         'msg': "Prédiction faite",
-        #         'predicted_classes': predicted_class_names,
-        #         'id': predictedSerialized.data.get("id"),
-        #     },
-        #     status=status.HTTP_200_OK)
-        response = JsonResponse({
-            'msg': "Prédiction faite",
-            'predicted_classes': predicted_class_names,
-            'id': predictedSerialized.data.get("id")
-        })
-        response["Access-Control-Allow-Origin"] = "*"
-        return response
+        return Response(            {
+                'msg': "Prédiction faite",
+                'predicted_classes': predicted_class_names,
+                'id': predictedSerialized.data.get("id"),
+            },
+            status=status.HTTP_200_OK)
 
 class UserFeedbackView(generics.CreateAPIView):
     serializer_class = UserFeedbackSerializer
