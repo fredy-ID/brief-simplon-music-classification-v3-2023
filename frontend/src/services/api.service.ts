@@ -64,7 +64,7 @@ export default class Api {
         
         const json = await Api.generic(url, {
             method: "POST",
-            body: data
+            body: data,
         }, haveContentType)
         
         if(!json) return false

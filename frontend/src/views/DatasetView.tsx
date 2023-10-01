@@ -16,6 +16,7 @@ export default function(){
     onMount( async () => {
         setResponse(await Api.get('/predictions/'))
         console.log(response()['rock']);
+        console.log(response());
         canTrain()
     })
 
