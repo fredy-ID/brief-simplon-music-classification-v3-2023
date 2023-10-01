@@ -63,6 +63,14 @@ DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
 CORS_ALLOW_ALL_ORIGINS=True
 
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+    'PUT',
+]
+
 ROOT_URLCONF = 'src.urls'
 
 TEMPLATES = [
