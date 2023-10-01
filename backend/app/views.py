@@ -44,13 +44,13 @@ def get_3sec_sample(uploaded_audio):
     return segments
 
 
-try:
-    model = load_model('app/ai_models/stable_model')
-except Exception as e:
-    print('_____________________________')
-    print('Erreur lors du chargement du modèle :', e)
-    print('_____________________________')
-    raise
+# try:
+#     model = load_model('app/ai_models/stable_model')
+# except Exception as e:
+#     print('_____________________________')
+#     print('Erreur lors du chargement du modèle :', e)
+#     print('_____________________________')
+#     raise
 
 def audio_pipeline(audio): 
     features = []
@@ -137,6 +137,15 @@ class PredictView(generics.CreateAPIView):
         # return Response(x_t)
         # Échelonne les données
         x_t = scaler.transform(x_t)
+        
+        try:
+            model = load_model('app/ai_models/stable_model')
+        except Exception as e:
+            print('_____________________________')
+            print('Erreur lors du chargement du modèle :', e)
+            print('_____________________________')
+            raise
+
 
         # Prédiction
         prediction = model.predict(x_t)
