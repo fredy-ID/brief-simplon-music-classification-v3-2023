@@ -165,7 +165,7 @@ class PredictView(generics.CreateAPIView):
                 'predicted_classes': predicted_class_names,
                 'id': predictedSerialized.data.get("id"),
             },
-            status=status.HTTP_200_OK)
+            status=status.HTTP_200_OK) 
 
 class UserFeedbackView(generics.CreateAPIView):
     serializer_class = UserFeedbackSerializer
