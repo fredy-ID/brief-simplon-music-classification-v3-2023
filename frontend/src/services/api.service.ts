@@ -53,7 +53,7 @@ export default class Api {
     }
 
 
-    static async post(url: string, body: object, haveContentType = false){
+    static async post(url: string, body: object, haveContentType = true){
         let data;
 
         if(body instanceof FormData){

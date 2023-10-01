@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Predict, UserFeedback, Features
+from .models import Predict, UserFeedback, Features, CSVDataset, Retraining
 
 class PredictSerializer(serializers.ModelSerializer):
     class Meta:
@@ -28,4 +28,14 @@ class FeatureSerializer(serializers.ModelSerializer):
 class UserFeedbackSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserFeedback
+        fields = '__all__'
+
+class CSVDatasetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CSVDataset
+        fields = '__all__'
+        
+class RetrainingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Retraining
         fields = '__all__'
