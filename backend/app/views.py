@@ -400,9 +400,17 @@ class RetrainingView(generics.CreateAPIView):
                     },
                     status=status.HTTP_400_BAD_REQUEST
                 )
+
             
-            model.save("app/ai_models/test/stable_model/")
-            model.save_weights('app/ai_models/test/stable_model/')
+            try:
+                model.save("app/ai_models/test/stable_model/")
+                model.save_weights('app/ai_models/test/stable_model/')
+            except Exception as e:
+                print("____________________________________")
+                print("le modèle n'a pas pu être sauvegardé")
+                print(e)
+                print("____________________________________")
+                
             
         except Exception as e:
             print("____________________________________")
@@ -416,7 +424,15 @@ class RetrainingView(generics.CreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        print("____________________________________")
+        print("Enregistrement")
+        print("____________________________________")
+        
         self.create(request, *args, **kwargs)
+        
+        print("____________________________________")
+        print("Enregistré")
+        print("____________________________________")
     
         return Response(
             {
