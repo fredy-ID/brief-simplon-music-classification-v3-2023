@@ -1,6 +1,6 @@
 const config = {
-    // host: "http://127.0.0.1:8000",
-    host: "http://simplon.fredy-mc.fr/backend-music-classification-v3",
+    host: "http://127.0.0.1:8000",
+    // host: "http://simplon.fredy-mc.fr/backend-music-classification-v3",
     baseUrl: "/api",
     options: {
         method: "GET",
@@ -53,7 +53,7 @@ export default class Api {
     }
 
 
-    static async post(url: string, body: object, haveContentType = true){
+    static async post(url: string, body: object, haveContentType = false){
         let data;
 
         if(body instanceof FormData){

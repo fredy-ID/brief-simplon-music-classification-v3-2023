@@ -10,7 +10,7 @@ export default function(){
     const onClickTrain = async () => {
         setIsTraining(true);
         try {
-            const response = await Api.post('/train-model/', {});
+            const response = await Api.post('/train-model/', {}, true);
             console.log(response);
             setTrainingMessage(response.msg); // Mettez à jour le message de formation
             setTrainingEpochs(response.epochs); // Mettez à jour le message de formation
