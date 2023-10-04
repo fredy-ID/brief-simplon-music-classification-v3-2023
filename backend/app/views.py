@@ -442,12 +442,19 @@ class RetrainingView(generics.CreateAPIView):
         print("____________________________________")
         print("Enregistré")
         print("____________________________________")
+        
+        num_train_samples = len(x_train)
+        genres_used_for_training = genres[:num_train_samples]
+        genre_counts = final_df['genre'].value_counts().to_dict()
     
         return Response(
             {
                 'msg': "L'entraînement a été effectué",
                 'epochs': epochs,
                 'accuracy': accuracy,
+                'num_train_samples': num_train_samples,
+                'genres_used_for_training': genres_used_for_training,
+                'genre_counts': genre_counts
             },
             status=status.HTTP_200_OK
         )
