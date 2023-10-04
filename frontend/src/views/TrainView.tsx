@@ -1,4 +1,5 @@
 import Api from "../services/api.service"
+import "./TrainView.css"
 import { createSignal } from 'solid-js';
 
 export default function(){
@@ -29,23 +30,26 @@ export default function(){
     };
 
     return <section>
-        <button onClick={onClickTrain}>Entrainer</button>
-        {isTraining() && (
-            <p>Entraînement en cours...</p>
+        {!isTraining() && (
+            <button onClick={onClickTrain}>Entrainer</button>
         )}
-        
-        {trainingMessage() && (
+        {isTraining() && (
+            <p class="text-3xl font-bold">Entraînement en cours...</p>
+        )}
+        {!isTraining() && trainingMessage() && (
             <div>
-                <p>{trainingMessage()}</p>
-                <p>Données d'entraînement : {trainingDataCount()} musiques ({trainingGenres()})</p>
-                <p>Entraîné sur {trainingEpochs()} epochs</p>
-                <hr />
+                <p class="text-3xl font-bold my-5">{trainingMessage()}</p>
+                <p>Données d'entraînement : <span class="font-bold">{trainingDataCount()} musiques</span> ({trainingGenres()})</p>
+                <p>Entraîné sur <span class="font-bold">{trainingEpochs()} epochs</span></p>
+                <hr class="my-3" />
                 <p>L'accuracy est de {trainingAccuracy()} %</p>
             </div>
         )}
 
-        {Object.entries(genreCounts()).map(([genre, count], index) => (
-            <p key={index}>{genre}: {count}</p>
+        {!isTraining() && Object.entries(genreCounts()).map(([genre, count], index) => (
+            <p class="font-bold" key={index}>{genre}: {count}</p>
         ))}
+
+        
     </section>
 }
