@@ -104,6 +104,7 @@ class PredictView(generics.CreateAPIView):
     
     
     def post(self, request, *args, **kwargs):
+        toUserModel = request.data['modele']
         music = request.FILES['music']  # Suppose que la musique est téléchargée en tant que fichier
         print(music)
         # return Response("music")
@@ -181,14 +182,16 @@ class PredictView(generics.CreateAPIView):
             mfcc20_var=np.var(mfcc[19]),
         )
 
-
         x_t = np.array(features, dtype=float).reshape(1, -1)  # Transforme les caractéristiques en tableau 2D
         # return Response(x_t)
         # Échelonne les données
         x_t = scaler.transform(x_t)
         
         try:
-            model = load_model('app/ai_models/stable_model')
+            if(int(toUserModel) == 2):
+                model = load_model('app/ai_models/test/stable_model')
+            else:
+                model = load_model('app/ai_models/stable_model')
         except Exception as e:
             print('_____________________________')
             print('Erreur lors du chargement du modèle :', e)
@@ -437,6 +440,7 @@ class RetrainingView(generics.CreateAPIView):
     permission_classes = (AllowAny,)
     
     def post(self, request, *args, **kwargs):
+        limit = request.data['limit']
         
         # TODO: Récupération de la data par nombre définit par l'utilisateur
         dataframe, ids_to_update = extractFeatureFromDBToCSV()
@@ -533,7 +537,6 @@ class RetrainingView(generics.CreateAPIView):
             # y = final_df['genre']
             # x = final_df.drop(columns=['genre'])
             genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
-            limit = 3
             genre_counts = final_df['genre'].value_counts().to_dict()
             genres_used_for_training = []
             limited_data = []
@@ -631,6 +634,7 @@ class RetrainingView(generics.CreateAPIView):
         print("____________________________________")
         
         num_train_samples = len(x_train)
+        num_test_samples = len(x_test)
         genres_used_for_training = genres[:num_train_samples]
         # genre_counts = final_df['genre'].value_counts().to_dict()
         # num_train_samples = limit * len(genres)
@@ -642,6 +646,7 @@ class RetrainingView(generics.CreateAPIView):
                 'epochs': epochs,
                 'accuracy': accuracy,
                 'num_train_samples': num_train_samples,
+                'num_test_samples': num_test_samples,
                 'genres_used_for_training': genres_used_for_training,
                 'genre_counts': genre_counts
             },
