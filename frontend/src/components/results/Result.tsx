@@ -6,6 +6,7 @@ interface InterfaceResponse {
     id: number,
     msg: string,
     predicted_classes: string | string[],
+    prediction_scores: number[];
 }
 
 export const [response, setResponse] = createSignal<InterfaceResponse>()

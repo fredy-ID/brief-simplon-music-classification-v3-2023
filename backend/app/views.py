@@ -1,5 +1,6 @@
 from .serializers import PredictSerializer, UserFeedbackSerializer, RetrainingSerializer
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 # from sklearn.preprocessing import StandardScaler
 from rest_framework.permissions import AllowAny
 from sklearn.preprocessing import LabelEncoder
@@ -95,7 +96,7 @@ def audio_pipeline(audio):
         features.append(np.mean(x))
         features.append(np.var(x))
 
-    return features
+    return features, mfcc
 
 class PredictView(generics.CreateAPIView):
     serializer_class = PredictSerializer
@@ -107,9 +108,18 @@ class PredictView(generics.CreateAPIView):
         print(music)
         # return Response("music")
         # audio, sr = librosa.load(music, sr=None)
-
+        
+        
         audio = get_3sec_sample(music)  # Récupère un tableau de features pour chaque 3 seconde de la musique
-        features = audio_pipeline(audio[2])  # Extrait les caractéristiques audio
+        features, mfcc = audio_pipeline(audio[2])  # Extrait les caractéristiques audio
+
+
+        print('_________________________')
+        print('_________________________')
+        print("Nombre de caractéristiques extraites :", len(features))
+        print('_________________________')
+        print('_________________________')
+        
 
 
         savedFeature = Features.objects.create(
@@ -129,7 +139,46 @@ class PredictView(generics.CreateAPIView):
             harmony_var = features[13],
             tempo_mean = features[14],
             tempo_var = features[15],
-        
+            mfcc1_mean=np.mean(mfcc[0]),
+            mfcc1_var=np.var(mfcc[0]),
+            mfcc2_mean=np.mean(mfcc[1]),
+            mfcc2_var=np.var(mfcc[1]),
+            mfcc3_mean=np.mean(mfcc[2]),
+            mfcc3_var=np.var(mfcc[2]),
+            mfcc4_mean=np.mean(mfcc[3]),
+            mfcc4_var=np.var(mfcc[3]),
+            mfcc5_mean=np.mean(mfcc[4]),
+            mfcc5_var=np.var(mfcc[4]),
+            mfcc6_mean=np.mean(mfcc[5]),
+            mfcc6_var=np.var(mfcc[5]),
+            mfcc7_mean=np.mean(mfcc[6]),
+            mfcc7_var=np.var(mfcc[6]),
+            mfcc8_mean=np.mean(mfcc[7]),
+            mfcc8_var=np.var(mfcc[7]),
+            mfcc9_mean=np.mean(mfcc[8]),
+            mfcc9_var=np.var(mfcc[8]),
+            mfcc10_mean=np.mean(mfcc[9]),
+            mfcc10_var=np.var(mfcc[9]),
+            mfcc11_mean=np.mean(mfcc[10]),
+            mfcc11_var=np.var(mfcc[10]),
+            mfcc12_mean=np.mean(mfcc[11]),
+            mfcc12_var=np.var(mfcc[11]),
+            mfcc13_mean=np.mean(mfcc[12]),
+            mfcc13_var=np.var(mfcc[12]),
+            mfcc14_mean=np.mean(mfcc[13]),
+            mfcc14_var=np.var(mfcc[13]),
+            mfcc15_mean=np.mean(mfcc[14]),
+            mfcc15_var=np.var(mfcc[14]),
+            mfcc16_mean=np.mean(mfcc[15]),
+            mfcc16_var=np.var(mfcc[15]),
+            mfcc17_mean=np.mean(mfcc[16]),
+            mfcc17_var=np.var(mfcc[16]),
+            mfcc18_mean=np.mean(mfcc[17]),
+            mfcc18_var=np.var(mfcc[17]),
+            mfcc19_mean=np.mean(mfcc[18]),
+            mfcc19_var=np.var(mfcc[18]),
+            mfcc20_mean=np.mean(mfcc[19]),
+            mfcc20_var=np.var(mfcc[19]),
         )
 
 
@@ -149,10 +198,12 @@ class PredictView(generics.CreateAPIView):
 
         # Prédiction
         prediction = model.predict(x_t)
+        # accuracy = accuracy_score(y_train, np.argmax(prediction, axis=1))
 
         probs = np.exp(prediction) / np.sum(np.exp(prediction), axis=1, keepdims=True)
         predicted_classes = np.argmax(probs, axis=1)
         predicted_class_names = [class_names[class_index] for class_index in predicted_classes]
+        prediction_scores = probs.tolist()[0]
         print(f"Prédiction pour la musique : {predicted_class_names}")
 
         # instance = self.create(request, *args, **kwargs)
@@ -163,6 +214,7 @@ class PredictView(generics.CreateAPIView):
         return Response(            {
                 'msg': "Prédiction faite",
                 'predicted_classes': predicted_class_names,
+                'prediction_scores': prediction_scores,
                 'id': predictedSerialized.data.get("id"),
             },
             status=status.HTTP_200_OK) 
@@ -265,7 +317,47 @@ def extractFeatureFromDBToCSV(limit = 2):
                 "harmony_mean": prediction.feature.harmony_mean,
                 "harmony_var": prediction.feature.harmony_var,
                 "tempo_mean": prediction.feature.tempo_mean,
-                "tempo_var": prediction.feature.tempo_var 
+                "tempo_var": prediction.feature.tempo_var,
+                "mfcc1_mean": prediction.feature.mfcc1_mean,
+                "mfcc1_var": prediction.feature.mfcc1_var,
+                "mfcc2_mean": prediction.feature.mfcc2_mean,
+                "mfcc2_var": prediction.feature.mfcc2_var,
+                "mfcc3_mean": prediction.feature.mfcc3_mean,
+                "mfcc3_var": prediction.feature.mfcc3_var,
+                "mfcc4_mean": prediction.feature.mfcc4_mean,
+                "mfcc4_var": prediction.feature.mfcc4_var,
+                "mfcc5_mean": prediction.feature.mfcc5_mean,
+                "mfcc5_var": prediction.feature.mfcc5_var,
+                "mfcc6_mean": prediction.feature.mfcc6_mean,
+                "mfcc6_var": prediction.feature.mfcc6_var,
+                "mfcc7_mean": prediction.feature.mfcc7_mean,
+                "mfcc7_var": prediction.feature.mfcc7_var,
+                "mfcc8_mean": prediction.feature.mfcc8_mean,
+                "mfcc8_var": prediction.feature.mfcc8_var,
+                "mfcc9_mean": prediction.feature.mfcc9_mean,
+                "mfcc9_var": prediction.feature.mfcc9_var,
+                "mfcc10_mean": prediction.feature.mfcc10_mean,
+                "mfcc10_var": prediction.feature.mfcc10_var,
+                "mfcc11_mean": prediction.feature.mfcc11_mean,
+                "mfcc11_var": prediction.feature.mfcc11_var,
+                "mfcc12_mean": prediction.feature.mfcc12_mean,
+                "mfcc12_var": prediction.feature.mfcc12_var,
+                "mfcc13_mean": prediction.feature.mfcc13_mean,
+                "mfcc13_var": prediction.feature.mfcc13_var,
+                "mfcc14_mean": prediction.feature.mfcc14_mean,
+                "mfcc14_var": prediction.feature.mfcc14_var,
+                "mfcc15_mean": prediction.feature.mfcc15_mean,
+                "mfcc15_var": prediction.feature.mfcc15_var,
+                "mfcc16_mean": prediction.feature.mfcc16_mean,
+                "mfcc16_var": prediction.feature.mfcc16_var,
+                "mfcc17_mean": prediction.feature.mfcc17_mean,
+                "mfcc17_var": prediction.feature.mfcc17_var,
+                "mfcc18_mean": prediction.feature.mfcc18_mean,
+                "mfcc18_var": prediction.feature.mfcc18_var,
+                "mfcc19_mean": prediction.feature.mfcc19_mean,
+                "mfcc19_var": prediction.feature.mfcc19_var,
+                "mfcc20_mean": prediction.feature.mfcc20_mean,
+                "mfcc20_var": prediction.feature.mfcc20_var
             })
             ids_to_update.append(prediction.id)
         
@@ -286,6 +378,46 @@ def extractFeatureFromDBToCSV(limit = 2):
         "harmony_var": [],
         "tempo_mean": [],
         "tempo_var": [],
+        "mfcc1_mean": [],
+        "mfcc1_var": [],
+        "mfcc2_mean": [],
+        "mfcc2_var": [],
+        "mfcc3_mean": [],
+        "mfcc3_var": [],
+        "mfcc4_mean": [],
+        "mfcc4_var": [],
+        "mfcc5_mean": [],
+        "mfcc5_var": [],
+        "mfcc6_mean": [],
+        "mfcc6_var": [],
+        "mfcc7_mean": [],
+        "mfcc7_var": [],
+        "mfcc8_mean": [],
+        "mfcc8_var": [],
+        "mfcc9_mean": [],
+        "mfcc9_var": [],
+        "mfcc10_mean": [],
+        "mfcc10_var": [],
+        "mfcc11_mean": [],
+        "mfcc11_var": [],
+        "mfcc12_mean": [],
+        "mfcc12_var": [],
+        "mfcc13_mean": [],
+        "mfcc13_var": [],
+        "mfcc14_mean": [],
+        "mfcc14_var": [],
+        "mfcc15_mean": [],
+        "mfcc15_var": [],
+        "mfcc16_mean": [],
+        "mfcc16_var": [],
+        "mfcc17_mean": [],
+        "mfcc17_var": [],
+        "mfcc18_mean": [],
+        "mfcc18_var": [],
+        "mfcc19_mean": [],
+        "mfcc19_var": [],
+        "mfcc20_mean": [],
+        "mfcc20_var": [],
         "genre": [],
     }
 
@@ -333,6 +465,46 @@ class RetrainingView(generics.CreateAPIView):
                     "harmony_var",
                     "tempo_mean",
                     "tempo_var",
+                    "mfcc1_mean",
+                    "mfcc1_var",
+                    "mfcc2_mean",
+                    "mfcc2_var",
+                    "mfcc3_mean",
+                    "mfcc3_var",
+                    "mfcc4_mean",
+                    "mfcc4_var",
+                    "mfcc5_mean",
+                    "mfcc5_var",
+                    "mfcc6_mean",
+                    "mfcc6_var",
+                    "mfcc7_mean",
+                    "mfcc7_var",
+                    "mfcc8_mean",
+                    "mfcc8_var",
+                    "mfcc9_mean",
+                    "mfcc9_var",
+                    "mfcc10_mean",
+                    "mfcc10_var",
+                    "mfcc11_mean",
+                    "mfcc11_var",
+                    "mfcc12_mean",
+                    "mfcc12_var",
+                    "mfcc13_mean",
+                    "mfcc13_var",
+                    "mfcc14_mean",
+                    "mfcc14_var",
+                    "mfcc15_mean",
+                    "mfcc15_var",
+                    "mfcc16_mean",
+                    "mfcc16_var",
+                    "mfcc17_mean",
+                    "mfcc17_var",
+                    "mfcc18_mean",
+                    "mfcc18_var",
+                    "mfcc19_mean",
+                    "mfcc19_var",
+                    "mfcc20_mean",
+                    "mfcc20_var",
                     "genre"
                 ]
                 existing_df = pd.DataFrame(columns=header)
@@ -343,7 +515,7 @@ class RetrainingView(generics.CreateAPIView):
             final_df.to_csv(csv_file_path, index=False)
             
             Predict.objects.filter(id__in=ids_to_update).update(exists_in_csv=True)
-                
+
         except Exception as e:
             print("____________________________________")
             print("Impossible de récupérer les données ciblées")
@@ -357,9 +529,24 @@ class RetrainingView(generics.CreateAPIView):
             )
         
         try:
+            # limit = 1
+            # y = final_df['genre']
+            # x = final_df.drop(columns=['genre'])
             genres = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
-            y = final_df['genre']
-            x = final_df.drop(columns=['genre'])
+            limit = 3
+            genre_counts = final_df['genre'].value_counts().to_dict()
+            genres_used_for_training = []
+            limited_data = []
+            
+            for genre, count in genre_counts.items():
+                limited_genre_data = final_df[final_df['genre'] == genre].head(limit)
+                limited_data.append(limited_genre_data)
+                genres_used_for_training.extend([genre] * len(limited_genre_data))
+                genre_counts[genre] = min(limit, len(limited_genre_data))
+
+            limited_final_df = pd.concat(limited_data, axis=0)
+            y = limited_final_df['genre']
+            x = limited_final_df.drop(columns=['genre'])
             x = np.array(x, dtype = float)
             x = scaler.fit_transform(x)
             y = encoder.fit_transform(y)
@@ -445,7 +632,9 @@ class RetrainingView(generics.CreateAPIView):
         
         num_train_samples = len(x_train)
         genres_used_for_training = genres[:num_train_samples]
-        genre_counts = final_df['genre'].value_counts().to_dict()
+        # genre_counts = final_df['genre'].value_counts().to_dict()
+        # num_train_samples = limit * len(genres)
+        # genres_used_for_training = genres[:limit] * len(genres)
     
         return Response(
             {
@@ -458,4 +647,5 @@ class RetrainingView(generics.CreateAPIView):
             },
             status=status.HTTP_200_OK
         )
-    
+        
+        num_train_samples

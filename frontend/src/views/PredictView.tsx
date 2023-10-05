@@ -23,6 +23,8 @@ export default function () {
             wavesurfer()?.on("pause", () => setIsPlaying(false))
         }
     })
+
+    const class_names = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
     
     return <>
         <section class='flex flex-wrap w-full  items-center justify-around '>
@@ -50,6 +52,18 @@ export default function () {
         <Show when={file() != undefined}>
             <section class='results flex justify-center mt-5'>
                 <Result />
+            </section>
+        </Show>
+
+        <Show when={response() != undefined}>
+            <section class='results flex flex-col justify-center mt-5'>
+                <div class="prediction-scores">
+                    {response()?.prediction_scores.map((score, index) => (
+                        <div key={index}>
+                            {`${class_names[index]}: ${score.toFixed(2)} %`}
+                        </div>
+                    ))}
+                </div>
             </section>
         </Show>
 
