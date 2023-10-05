@@ -599,7 +599,7 @@ class RetrainingView(generics.CreateAPIView):
 
             
             try:
-                model.save("app/ai_models/test/stable_model/")
+                model.save("app/ai_models/stable_model/")
                 model.save_weights('app/ai_models/test/stable_model/')
             except Exception as e:
                 print("____________________________________")
