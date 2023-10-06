@@ -11,7 +11,7 @@ export default function(){
     const [trainingGenres, setTrainingGenres] = createSignal('');
     const [genreCounts, setGenreCounts] = createSignal<{ [key: string]: number }>({});
     const [isTraining, setIsTraining] = createSignal(false);
-    const [limit, setLimit] = createSignal(1); // Ajoutez le state pour la limite
+    const [limit, setLimit] = createSignal(2); // Ajoutez le state pour la limite
     
 
     const onClickTrain = async () => {
@@ -43,9 +43,9 @@ export default function(){
         {!isTraining() && (
             <div>
                 <button onClick={onClickTrain}>Entrainer</button>
-                <div>
-                    <label class="limit">Limit :</label>
-                    <input type="number" id="limit" value={limit()} onChange={handleLimitChange} />
+                <div class="flex flex-col">
+                    <label class="limit">Limit d'échantillon par genre:</label>
+                    <input class="select select-bordered w-full max-w-xs" type="number" id="limit" value={limit()} onChange={handleLimitChange} />
                 </div>
             </div>
             
@@ -56,7 +56,7 @@ export default function(){
         {!isTraining() && trainingMessage() && (
             <div>
                 <p class="text-3xl font-bold my-5">{trainingMessage()}</p>
-                <p>Données d'entraînement : <span class="font-bold">{trainingDataCount()} musique(s)</span> ({trainingGenres()})</p>
+                <p>Données d'entraînement : <span class="font-bold">{trainingDataCount()} musique(s)</span></p>
                 <p>Données de test : <span class="font-bold">{testDataCount()} musique(s)</span></p>
                 <p>Entraîné sur <span class="font-bold">{trainingEpochs()} epochs</span></p>
                 <hr class="my-3" />

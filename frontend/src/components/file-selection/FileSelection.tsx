@@ -24,9 +24,9 @@ export default function(props: {onSelect: (e: any) => void}){
       <div class="w-full">
         <div class="my-5">
             <label class="modele">Modèle :</label>
-            <select id="modele" value={modele()} onChange={handleModeleChange}>
-                <option value="1">1</option>
-                <option value="2">2</option>
+            <select class="select select-info select-bordered w-full max-w-xs" id="modele" value={modele()} onChange={handleModeleChange}>
+                <option value="1">Ancien modèle (Stable)</option>
+                <option value="2">Nouveau modèle (En entraînement)</option>
             </select>
         </div>
         <label
