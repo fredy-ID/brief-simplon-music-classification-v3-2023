@@ -187,11 +187,14 @@ class PredictView(generics.CreateAPIView):
         # Échelonne les données
         x_t = scaler.transform(x_t)
         
+        print('_____________________________')
+        print('toUserModel', int(toUserModel))
+        print('_____________________________')
         try:
             if(int(toUserModel) == 2):
                 model = load_model('app/ai_models/test/stable_model')
-            else:
-                model = load_model('app/ai_models/stable_model')
+            elif(int(toUserModel) == 1):
+                model = load_model('app/ai_model_with_deep_learning_91_acc_no_perceptr_2')
         except Exception as e:
             print('_____________________________')
             print('Erreur lors du chargement du modèle :', e)
@@ -602,7 +605,7 @@ class RetrainingView(generics.CreateAPIView):
 
             
             try:
-                model.save("app/ai_models/stable_model/")
+                model.save("app/ai_models/test/stable_model/")
                 model.save_weights('app/ai_models/test/stable_model/')
             except Exception as e:
                 print("____________________________________")
