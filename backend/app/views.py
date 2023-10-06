@@ -42,7 +42,7 @@ def get_3sec_sample(uploaded_audio):
         segment = audio[i : i + segment_length]
         segments.append(segment)
 
-    return segments
+    return segments, sample_rate
 
 
 # try:
@@ -53,7 +53,7 @@ def get_3sec_sample(uploaded_audio):
 #     print('_____________________________')
 #     raise
 
-def audio_pipeline(audio): 
+def audio_pipeline(audio, sample_rate): 
     features = []
 
     # Calcul du ZCR
@@ -86,8 +86,9 @@ def audio_pipeline(audio):
     features.append(np.mean(harmony))
     features.append(np.var(harmony))
 
-    tempo = librosa.beat.tempo(y=audio)
-    features.append(tempo[0])
+    # tempo = librosa.beat.tempo(y=audio)
+    tempo, _ = librosa.beat.beat_track(y=audio, sr=sample_rate)
+    features.append(tempo)
 
     # Calcul des moyennes des MFCC
     mfcc = librosa.feature.mfcc(y=audio)
@@ -111,8 +112,8 @@ class PredictView(generics.CreateAPIView):
         # audio, sr = librosa.load(music, sr=None)
         
         
-        audio = get_3sec_sample(music)  # Récupère un tableau de features pour chaque 3 seconde de la musique
-        features, mfcc = audio_pipeline(audio[2])  # Extrait les caractéristiques audio
+        audio, sample_rate = get_3sec_sample(music)  # Récupère un tableau de features pour chaque 3 seconde de la musique
+        features, mfcc = audio_pipeline(audio[2], sample_rate)  # Extrait les caractéristiques audio
 
 
         print('_________________________')
@@ -138,8 +139,7 @@ class PredictView(generics.CreateAPIView):
             zcr_var = features[11],
             harmony_mean = features[12],
             harmony_var = features[13],
-            tempo_mean = features[14],
-            tempo_var = features[15],
+            tempo = features[14],
             mfcc1_mean=np.mean(mfcc[0]),
             mfcc1_var=np.var(mfcc[0]),
             mfcc2_mean=np.mean(mfcc[1]),
@@ -322,8 +322,7 @@ def extractFeatureFromDBToCSV(limit = 2):
                 "zcr_var": prediction.feature.zcr_var,
                 "harmony_mean": prediction.feature.harmony_mean,
                 "harmony_var": prediction.feature.harmony_var,
-                "tempo_mean": prediction.feature.tempo_mean,
-                "tempo_var": prediction.feature.tempo_var,
+                "tempo": prediction.feature.tempo,
                 "mfcc1_mean": prediction.feature.mfcc1_mean,
                 "mfcc1_var": prediction.feature.mfcc1_var,
                 "mfcc2_mean": prediction.feature.mfcc2_mean,
@@ -382,8 +381,7 @@ def extractFeatureFromDBToCSV(limit = 2):
         "zcr_var": [],
         "harmony_mean": [],
         "harmony_var": [],
-        "tempo_mean": [],
-        "tempo_var": [],
+        "tempo": [],
         "mfcc1_mean": [],
         "mfcc1_var": [],
         "mfcc2_mean": [],
@@ -470,8 +468,7 @@ class RetrainingView(generics.CreateAPIView):
                     "zcr_var",
                     "harmony_mean",
                     "harmony_var",
-                    "tempo_mean",
-                    "tempo_var",
+                    "tempo",
                     "mfcc1_mean",
                     "mfcc1_var",
                     "mfcc2_mean",

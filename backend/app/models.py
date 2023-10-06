@@ -24,8 +24,7 @@ class Features(models.Model):
     harmony_mean = models.FloatField()
     harmony_var = models.FloatField()
 
-    tempo_mean = models.FloatField()
-    tempo_var = models.FloatField()
+    tempo = models.FloatField()
     
     mfcc1_mean = models.FloatField()
     mfcc1_var = models.FloatField()
