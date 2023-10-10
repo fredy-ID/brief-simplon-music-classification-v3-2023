@@ -3,7 +3,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 # from sklearn.preprocessing import StandardScaler
 from rest_framework.permissions import AllowAny
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 from rest_framework.response import Response
 from rest_framework import generics, status
 from tensorflow.keras.models import load_model
@@ -21,11 +21,15 @@ import os
 
 
 encoder = LabelEncoder()
-scaler = joblib.load("./app/ai_models/scalerModelF.pkl")
+try:
+    scaler = joblib.load("./app/ai_models/test/stable_model/scaler.pkl")
+except:
+    scaler = StandardScaler()
+scaler2 = joblib.load("./app/ai_models_old_stable_model/scaler.pkl") 
+
 
 class_names = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
 num_classes = len(class_names)
-
 
 def get_3sec_sample(uploaded_audio):
     audio, sample_rate = librosa.load(
@@ -185,16 +189,18 @@ class PredictView(generics.CreateAPIView):
         x_t = np.array(features, dtype=float).reshape(1, -1)  # Transforme les caractéristiques en tableau 2D
         # return Response(x_t)
         # Échelonne les données
-        x_t = scaler.transform(x_t)
+        
         
         print('_____________________________')
         print('toUserModel', int(toUserModel))
         print('_____________________________')
         try:
             if(int(toUserModel) == 2):
+                x_t = scaler.transform(x_t)
                 model = load_model('app/ai_models/test/stable_model')
             elif(int(toUserModel) == 1):
-                model = load_model('app/ai_model_with_deep_learning_91_acc_no_perceptr_2')
+                x_t = scaler2.transform(x_t)
+                model = load_model('app/ai_models_old_stable_model')
         except Exception as e:
             print('_____________________________')
             print('Erreur lors du chargement du modèle :', e)
@@ -604,6 +610,7 @@ class RetrainingView(generics.CreateAPIView):
             try:
                 model.save("app/ai_models/test/stable_model/")
                 model.save_weights('app/ai_models/test/stable_model/')
+                joblib.dump(scaler, "app/ai_models/test/stable_model/scaler.pkl") 
             except Exception as e:
                 print("____________________________________")
                 print("le modèle n'a pas pu être sauvegardé")
