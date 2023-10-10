@@ -1,5 +1,7 @@
-# brief-simplon-music-classification-v3-2023
+# Classification de musique
  Création d'une page de test pour les modèles de classification de musique
+
+## Backend
 
 ### 🛠️Créer l'environment virtuel
 Ce dernier ira contenir toutes les dépendances [*(Bibliothèques)*](#dépendances) de votre backend, n'oubliez pas de le référencer dans le [.gitignore](https://www.git-scm.com/docs/gitignore), de même pour la base de donnée et le fichier `secret.py`, lui même dans le dossier [src](./backend/src/)
@@ -35,6 +37,19 @@ Avec powershell
 py manage.py runserver
 ```
 
+## Frontend
+
+### Initialiez les dépendances
+```sh
+cd frontend
+pip npm install
+```
+
+### Lancer le serveur front
+Avec powershell
+```sh
+npm run dev
+```
 
 ### 📚Arborescence
 ⚠️ Vision simplifié de l'arborescence
